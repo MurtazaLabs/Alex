@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alex OS — Forex Research Agent</title>
+  <link rel="stylesheet" href="css/design-tokens.css?v=2026.09.21">
+  <link rel="stylesheet" href="css/base.css?v=2026.09.21">
+  <link rel="stylesheet" href="css/layout.css?v=2026.09.21">
+  <link rel="stylesheet" href="css/components.css?v=2026.09.22">
+  <link rel="stylesheet" href="css/login.css?v=2026.09.21">
+</head>
+<body>
+
+  <!-- ===================== App shell ===================== -->
+  <div id="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-logo">A</div>
+        <div>
+          <div class="brand-name">Alex OS</div>
+          <div class="brand-sub">Forex Research Agent</div>
+        </div>
+      </div>
+      <nav class="nav" id="nav" aria-label="Main navigation"></nav>
+      <div class="sidebar-foot">
+        <div class="flex"><span class="dot" id="sb-dot"></span><span id="sb-conn">Connecting…</span></div>
+        <div class="mt-2">Feed: <span class="mono" id="sb-feed">—</span></div>
+      </div>
+    </aside>
+
+    <header class="topbar">
+      <button class="btn btn-icon nav-toggle" id="nav-toggle" aria-label="Toggle menu">☰</button>
+      <div>
+        <div class="topbar-title" id="page-title">Dashboard</div>
+        <div class="topbar-sub" id="page-sub"></div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-sm" id="btn-refresh">⟳ Refresh</button>
+        <button class="btn btn-sm btn-danger" id="btn-logout">Logout</button>
+      </div>
+    </header>
+
+    <main class="main" id="main" tabindex="-1"></main>
+
+    <footer class="statusbar">
+      <span class="sb-item"><span class="dot" id="st-dot"></span><span id="st-conn">Connecting…</span></span>
+      <span class="sb-sep"></span>
+      <span class="sb-item">Feed <span class="mono" id="st-feed">—</span><span id="st-feed-lights" title="provider chain health"></span></span>
+      <span class="sb-sep"></span>
+      <span class="sb-item" id="st-llm" title="LLM provider chain — click for details" style="cursor:pointer">LLM <span class="mono" id="st-llm-model">—</span></span>
+      <span class="sb-sep"></span>
+      <span class="sb-item">Pairs <span class="mono" id="st-pairs">—</span></span>
+      <span class="sb-item" style="margin-left:auto" id="st-user"></span>
+      <span class="sb-sep"></span>
+      <span class="sb-item mono" id="st-clock">—</span>
+    </footer>
+  </div>
+
+  <!-- ===================== Login (pure CSS .open state) ===================== -->
+  <div id="login-overlay">
+    <div class="login-card">
+      <div class="login-logo">A</div>
+      <div class="login-title">Sign in to Alex</div>
+      <div class="login-sub">Your forex research agent · MT5 live data</div>
+      <div class="login-error" id="login-error"></div>
+      <div class="field">
+        <label for="login-user">Username</label>
+        <input class="input" id="login-user" autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="login-pass">Password</label>
+        <input class="input" id="login-pass" type="password" autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary" id="login-go">Sign in</button>
+    </div>
+  </div>
+
+  <!-- ===================== Modal root + toasts ===================== -->
+  <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-title" id="modal-title"></div>
+        <button class="modal-x" id="modal-x" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-foot" id="modal-foot"></div>
+    </div>
+  </div>
+  <div class="toast-stack" id="toast-stack"></div>
+
+  <!-- ===================== Boot watchdog banner ===================== -->
+  <div id="boot-banner">
+    <span id="boot-banner-msg"></span>
+    <button onclick="window.__forceFreshReload()">Force reload</button>
+  </div>
+
+  <script>
+    // Boot watchdog: if the app has not started within 2.5s, SAY SO visibly.
+    (function () {
+      var timer = setTimeout(function () {
+        if (window.__alexBooted) return;
+        show('Alex failed to start. Checking what is wrong…');
+        fetch('/api/health').then(function (r) {
+          show(r.ok
+            ? 'The server is up, but the browser ran old code. Click Force reload to bypass every cache.'
+            : 'The server answered with an error. Restart it with run_api.bat, then Force reload.');
+        }).catch(function () {
+          show('The API server is not responding. Start it with run_api.bat, then Force reload.');
+        });
+      }, 2500);
+      function show(msg) {
+        var b = document.getElementById('boot-banner');
+        if (!b) return;
+        document.getElementById('boot-banner-msg').textContent = '⚠ ' + msg;
+        b.classList.add('show');
+      }
+      window.__bootHide = function () {
+        var b = document.getElementById('boot-banner');
+        if (b) b.classList.remove('show');
+      };
+      window.__bootFail = show;
+      window.__forceFreshReload = function () {
+        var go = function () { location.replace('/?fresh=' + Date.now()); };
+        if (window.caches && caches.keys) {
+          caches.keys().then(function (ks) {
+            return Promise.all(ks.map(function (k) { return caches.delete(k); }));
+          }).catch(function () {}).then(go);
+        } else { go(); }
+      };
+      if (location.protocol === 'file:') {
+        show('Alex UI cannot run from a file. Open http://localhost:8000 in your browser.');
+      }
+    })();
+  </script>
+
+  <!-- ===================== App scripts (order matters) ===================== -->
+  <script src="js/api.js?v=2026.09.21"></script>
+  <script src="js/state.js?v=2026.09.21"></script>
+  <script src="js/ui.js?v=2026.09.21"></script>
+  <script src="js/ws.js?v=2026.09.21"></script>
+  <script src="js/router.js?v=2026.09.22"></script>
+  <script src="js/charts.js?v=2026.09.22"></script>
+  <script src="js/shell.js?v=2026.09.22"></script>
+  <script src="js/pages/dashboard.js?v=2026.09.22"></script>
+  <script src="js/pages/signals.js?v=2026.09.22"></script>
+  <script src="js/pages/trading.js?v=2026.10.16"></script>
+  <script src="js/pages/markets.js?v=2026.09.22c"></script>
+  <script src="js/pages/strategies.js?v=2026.09.30-c4"></script>
+  <script src="js/pages/experiments.js?v=2026.09.26-c2"></script>
+  <script src="js/pages/research.js?v=2026.09.26-c3"></script>
+  <script src="js/pages/knowledge.js?v=2026.09.22"></script>
+  <script src="js/pages/chat.js?v=2026.09.22"></script>
+  <script src="js/pages/account.js?v=2026.09.22"></script>
+  <script src="js/pages/settings.js?v=2026.09.22"></script>
+  <script src="js/boot.js?v=2026.09.22"></script>
+</body>
+</html>

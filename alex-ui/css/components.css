@@ -1,0 +1,205 @@
+/* ==========================================================================
+   ALEX OS — Components: cards, tables, modal (CSS-only state), toasts
+   ========================================================================== */
+
+/* Cards */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-md);
+  padding: var(--sp-5);
+}
+.card-title {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: var(--sp-4);
+}
+.card-grid { display: grid; gap: var(--sp-4); }
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 1100px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } .grid-3 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px)  { .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; } }
+
+/* Stat cards (dashboard) */
+.stat-card { position: relative; overflow: hidden; }
+.stat-card .stat-label { font-size: var(--fs-sm); color: var(--text-secondary); }
+.stat-card .stat-value { font-size: var(--fs-2xl); font-weight: var(--fw-bold); margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
+.stat-card .stat-sub { font-size: var(--fs-xs); color: var(--text-muted); }
+.stat-card::after {
+  content: "";
+  position: absolute;
+  right: -20px; top: -20px;
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  filter: blur(28px);
+}
+
+/* Tables */
+.table-wrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: var(--fs-base); }
+.table th {
+  text-align: left;
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  font-weight: var(--fw-semibold);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-default);
+  white-space: nowrap;
+}
+.table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+.table tbody tr { transition: background var(--t-fast); }
+.table tbody tr:hover { background: rgba(255, 255, 255, 0.025); }
+.table .num { font-variant-numeric: tabular-nums; text-align: right; }
+.table .actions { display: flex; gap: var(--sp-2); justify-content: flex-end; }
+
+/* ==========================================================================
+   Modal — visibility is plain CSS, animation is decoration only.
+   The element carries .open when shown; opacity comes from CSS, never JS.
+   ========================================================================== */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 6, 10, 0.66);
+  backdrop-filter: blur(3px);
+  z-index: var(--z-modal);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+}
+.modal-overlay.open { display: flex; }
+.modal-overlay.closing { opacity: 0; transition: opacity 140ms ease-in; }
+
+.modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 460px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+@keyframes modal-in {
+  from { transform: translateY(12px) scale(0.98); opacity: 0.4; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+.modal-overlay.open:not(.closing) .modal { animation: modal-in var(--t-normal) ease-out; }
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.modal-title { font-size: var(--fs-md); font-weight: var(--fw-semibold); }
+.modal-x {
+  border: 0; background: transparent; color: var(--text-muted);
+  font-size: 1.25rem; cursor: pointer; padding: 4px 8px; border-radius: var(--r-sm);
+}
+.modal-x:hover { background: var(--bg-hover); color: var(--text-primary); }
+.modal-body { padding: var(--sp-5); overflow-y: auto; }
+.modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* ==========================================================================
+   Toasts — same principle: CSS class controls visibility
+   ========================================================================== */
+
+.toast-stack {
+  position: fixed;
+  top: var(--sp-4);
+  right: var(--sp-4);
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  max-width: 380px;
+}
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-left: 3px solid var(--info);
+  border-radius: var(--r-md);
+  padding: var(--sp-3) var(--sp-4);
+  box-shadow: var(--shadow-md);
+  opacity: 1;
+  transform: none;
+  transition: opacity var(--t-normal), transform var(--t-normal);
+}
+.toast.leaving { opacity: 0; transform: translateX(24px); }
+.toast-success { border-left-color: var(--success); }
+.toast-error   { border-left-color: var(--danger); }
+.toast-warning { border-left-color: var(--warning); }
+.toast-msg { flex: 1; font-size: var(--fs-base); }
+.toast-x {
+  border: 0; background: none; color: var(--text-muted);
+  cursor: pointer; font-size: 1rem; padding: 0 2px;
+}
+.toast-x:hover { color: var(--text-primary); }
+
+/* ==========================================================================
+   Progress (probation accrual)
+   ========================================================================== */
+
+.progress {
+  height: 6px;
+  border-radius: var(--r-full);
+  background: var(--bg-elevated);
+  overflow: hidden;
+}
+.progress > div {
+  height: 100%;
+  border-radius: var(--r-full);
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transition: width var(--t-slow);
+}
+
+/* Evidence tree (signal detail) */
+.evidence { font-size: var(--fs-base); }
+.evidence-row {
+  display: flex;
+  gap: var(--sp-3);
+  padding: 5px 0;
+  border-bottom: 1px dashed var(--border-subtle);
+}
+.evidence-row:last-child { border-bottom: 0; }
+.evidence-row .k { color: var(--text-muted); min-width: 180px; }
+.evidence-row .v { flex: 1; }
+
+/* Markets watchlist chips (pair buttons with inline remove) */
+.wl-chip { position: relative; display: inline-flex; align-items: center; }
+.wl-chip .wl-x {
+  position: absolute; top: -6px; right: -6px; z-index: 2;
+  width: 16px; height: 16px; line-height: 14px; text-align: center;
+  border-radius: 50%; font-size: 12px; font-weight: 700;
+  color: var(--danger); background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  cursor: pointer; opacity: 0; transition: opacity var(--t-fast);
+}
+.wl-chip:hover .wl-x, .wl-chip .wl-x:focus-visible { opacity: 1; }
+.wl-chip .wl-x:hover { background: var(--danger-dim); border-color: var(--danger); }
+.mkt-add-btn { color: var(--accent); border-color: var(--border-strong); }
+.mkt-add-btn:hover { background: var(--accent-dim); border-color: var(--accent); }

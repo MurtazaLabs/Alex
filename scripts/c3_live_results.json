@@ -1,0 +1,496 @@
+{
+  "pass1": {
+    "schema_version": 1,
+    "topic": "C3 live verification",
+    "generated_at": "2026-09-26T03:39:29.047846",
+    "scope": {
+      "experiment": 1,
+      "research_task": 10,
+      "probation": 9,
+      "health": 1
+    },
+    "evidence": [
+      {
+        "id": "exp:c04a0ab0",
+        "kind": "experiment",
+        "summary": "experiment c04a0ab0 on strategy f39b8d40: verdict FAIL",
+        "metrics": {}
+      },
+      {
+        "id": "task:20fcd565-7400-4251-948b-fe3948526f22",
+        "kind": "research_task",
+        "summary": "research task 20fcd565-7400-4251-948b-fe3948526f22: EUR/USD: FallbackTrend EUR/USD \u2014 COMPLETED",
+        "metrics": {}
+      },
+      {
+        "id": "task:e1fb1dc0-834e-49ea-9701-1caa2ab3690a",
+        "kind": "research_task",
+        "summary": "research task e1fb1dc0-834e-49ea-9701-1caa2ab3690a: GBP/JPY: FallbackTrend GBP/JPY \u2014 COMPLETED",
+        "metrics": {}
+      },
+      {
+        "id": "task:d4f7ca9e-4065-4fc0-a1b7-06d48ccb3c81",
+        "kind": "research_task",
+        "summary": "research task d4f7ca9e-4065-4fc0-a1b7-06d48ccb3c81: EUR/USD: FallbackTrend EUR/USD \u2014 COMPLETED",
+        "metrics": {}
+      },
+      {
+        "id": "task:d9277106-bda6-445c-87c8-9c76c60097b6",
+        "kind": "research_task",
+        "summary": "research task d9277106-bda6-445c-87c8-9c76c60097b6: EUR/USD: EUR/USD Bearish Trend Pullback Strategy \u2014 COMPLETED",
+        "metrics": {}
+      },
+      {
+        "id": "task:a94c1ffe-c749-47c9-8fa9-daa52ccf3db8",
+        "kind": "research_task",
+        "summary": "research task a94c1ffe-c749-47c9-8fa9-daa52ccf3db8: EUR/USD: EUR/USD Bearish Trend Pullback Strategy \u2014 COMPLETED",
+        "metrics": {}
+      },
+      {
+        "id": "task:fc779aa2-9e5b-41bf-aa76-42cb6600fc44",
+        "kind": "research_task",
+        "summary": "research task fc779aa2-9e5b-41bf-aa76-42cb6600fc44: EUR/USD: Bearish Trend Pullback Short on EUR/USD H1 \u2014 COMPLETED",
+        "metrics": {}
+      },
+      {
+        "id": "task:50a6ac4b-cf66-4764-876d-a371345e30c9",
+        "kind": "research_task",
+        "summary": "research task 50a6ac4b-cf66-4764-876d-a371345e30c9: EUR/USD: EUR/USD Bearish Trend Pullback \u2014 COMPLETED",
+        "metrics": {}
+      },
+      {
+        "id": "task:d6e159f1-4d6e-4b0b-af4f-679661058c6e",
+        "kind": "research_task",
+        "summary": "research task d6e159f1-4d6e-4b0b-af4f-679661058c6e: EUR/USD: EUR/USD Bearish Trend Pullback \u2014 COMPLETED",
+        "metrics": {}
+      },
+      {
+        "id": "task:853f1bd2-7d70-4447-b2e6-3abf32fb5e66",
+        "kind": "research_task",
+        "summary": "research task 853f1bd2-7d70-4447-b2e6-3abf32fb5e66: EUR/USD: EUR/USD Bearish Trend Pullback Short \u2014 COMPLETED",
+        "metrics": {}
+      },
+      {
+        "id": "task:3a6c2033-63c3-43ad-bc08-97093f161fc7",
+        "kind": "research_task",
+        "summary": "research task 3a6c2033-63c3-43ad-bc08-97093f161fc7: EUR/USD: Bearish Trend EMA Pullback \u2014 COMPLETED",
+        "metrics": {}
+      },
+      {
+        "id": "prob:2bba7423",
+        "kind": "probation",
+        "summary": "probation 2bba7423 (EUR/USD): rejected, 0/20 trades",
+        "metrics": {
+          "observed_trades": 0.0,
+          "required_trades": 20.0,
+          "progress": 0.0
+        }
+      },
+      {
+        "id": "prob:ce954558",
+        "kind": "probation",
+        "summary": "probation ce954558 (EUR/USD): rejected, 0/20 trades",
+        "metrics": {
+          "observed_trades": 0.0,
+          "required_trades": 20.0,
+          "progress": 0.0
+        }
+      },
+      {
+        "id": "prob:f39b8d40",
+        "kind": "probation",
+        "summary": "probation f39b8d40 (GBP/JPY): active, 0/5 trades",
+        "metrics": {
+          "observed_trades": 0.0,
+          "required_trades": 5.0,
+          "progress": 0.0
+        }
+      },
+      {
+        "id": "prob:1d94dd19",
+        "kind": "probation",
+        "summary": "probation 1d94dd19 (EUR/USD): rejected, 0/20 trades",
+        "metrics": {
+          "observed_trades": 0.0,
+          "required_trades": 20.0,
+          "progress": 0.0
+        }
+      },
+      {
+        "id": "prob:32a51c21",
+        "kind": "probation",
+        "summary": "probation 32a51c21 (EUR/USD): rejected, 0/20 trades",
+        "metrics": {
+          "observed_trades": 0.0,
+          "required_trades": 20.0,
+          "progress": 0.0
+        }
+      },
+      {
+        "id": "prob:48ecc838",
+        "kind": "probation",
+        "summary": "probation 48ecc838 (EUR/USD): rejected, 0/20 trades",
+        "metrics": {
+          "observed_trades": 0.0,
+          "required_trades": 20.0,
+          "progress": 0.0
+        }
+      },
+      {
+        "id": "prob:f51684ce",
+        "kind": "probation",
+        "summary": "probation f51684ce (EUR/USD): rejected, 0/20 trades",
+        "metrics": {
+          "observed_trades": 0.0,
+          "required_trades": 20.0,
+          "progress": 0.0
+        }
+      },
+      {
+        "id": "prob:337a589e",
+        "kind": "probation",
+        "summary": "probation 337a589e (EUR/USD): rejected, 0/20 trades",
+        "metrics": {
+          "observed_trades": 0.0,
+          "required_trades": 20.0,
+          "progress": 0.0
+        }
+      },
+      {
+        "id": "prob:83dd89bf",
+        "kind": "probation",
+        "summary": "probation 83dd89bf (EUR/USD): rejected, 0/20 trades",
+        "metrics": {
+          "observed_trades": 0.0,
+          "required_trades": 20.0,
+          "progress": 0.0
+        }
+      },
+      {
+        "id": "health:f39b8d40",
+        "kind": "health",
+        "summary": "health card for strategy f39b8d40",
+        "metrics": {}
+      }
+    ],
+    "title": "C3 Live Verification Report",
+    "summary": "This report details the research tasks and probation statuses for EUR/USD and GBP/JPY strategies. Multiple research tasks for bearish trend pullbacks and fallback trends have been completed. Most EUR/USD probation periods were rejected, while one GBP/JPY probation remains active.",
+    "llm_used": true,
+    "llm_error": null,
+    "sections": [
+      {
+        "heading": "Probation and Experiment Results",
+        "narrative": "EUR/USD probations were rejected across multiple IDs, all showing 0/20 trades (prob:2bba7423, prob:ce954558, prob:1d94dd19, prob:32a51c21, prob:48ecc838, prob:f51684ce, prob:337a589e, prob:83dd89bf). For GBP/JPY, probation prob:f39b8d40 is active with 0/5 trades. Experiment c04a0ab0 on strategy f39b8d40 resulted in a verdict of FAIL.",
+        "source": "llm",
+        "evidence_ids": [
+          "prob:2bba7423",
+          "prob:ce954558",
+          "prob:f39b8d40",
+          "prob:1d94dd19",
+          "prob:32a51c21",
+          "prob:48ecc838",
+          "prob:f51684ce",
+          "prob:337a589e",
+          "prob:83dd89bf",
+          "exp:c04a0ab0"
+        ],
+        "trace_issues": []
+      },
+      {
+        "heading": "Research Task Completion",
+        "narrative": "Several research tasks have been completed for EUR/USD, focusing on FallbackTrend (task:20fcd565-7400-4251-948b-fe3948526f22, task:d4f7ca9e-4065-4fc0-a1b7-06d48ccb3c81) and various Bearish Trend Pullback strategies (task:d9277106-bda6-445c-87c8-9c76c60097b6, task:a94c1ffe-c749-47c9-8fa9-daa52ccf3db8, task:fc779aa2-9e5b-41bf-aa76-42cb6600fc44, task:50a6ac4b-cf66-4764-876d-a371345e30c9, task:d6e159f1-4d6e-4b0b-af4f-679661058c6e, task:853f1bd2-7d70-4447-b2e6-3abf32fb5e66, task:3a6c2033-63c3-43ad-bc08-97093f161fc7). Additionally, a FallbackTrend task for GBP/JPY was completed (task:e1fb1dc0-834e-49ea-9701-1caa2ab3690a).",
+        "source": "llm",
+        "evidence_ids": [
+          "task:20fcd565-7400-4251-948b-fe3948526f22",
+          "task:e1fb1dc0-834e-49ea-9701-1caa2ab3690a",
+          "task:d4f7ca9e-4065-4fc0-a1b7-06d48ccb3c81",
+          "task:d9277106-bda6-445c-87c8-9c76c60097b6",
+          "task:a94c1ffe-c749-47c9-8fa9-daa52ccf3db8",
+          "task:fc779aa2-9e5b-41bf-aa76-42cb6600fc44",
+          "task:50a6ac4b-cf66-4764-876d-a371345e30c9",
+          "task:d6e159f1-4d6e-4b0b-af4f-679661058c6e",
+          "task:853f1bd2-7d70-4447-b2e6-3abf32fb5e66",
+          "task:3a6c2033-63c3-43ad-bc08-97093f161fc7"
+        ],
+        "trace_issues": []
+      },
+      {
+        "heading": "Probation",
+        "narrative": "9 probation record(s) in scope:\n- probation 2bba7423 (EUR/USD): rejected, 0/20 trades [observed_trades=0, progress=0, required_trades=20]\n- probation ce954558 (EUR/USD): rejected, 0/20 trades [observed_trades=0, progress=0, required_trades=20]\n- probation f39b8d40 (GBP/JPY): active, 0/5 trades [observed_trades=0, progress=0, required_trades=5]\n- probation 1d94dd19 (EUR/USD): rejected, 0/20 trades [observed_trades=0, progress=0, required_trades=20]\n- probation 32a51c21 (EUR/USD): rejected, 0/20 trades [observed_trades=0, progress=0, required_trades=20]\n- probation 48ecc838 (EUR/USD): rejected, 0/20 trades [observed_trades=0, progress=0, required_trades=20]",
+        "source": "fallback",
+        "evidence_ids": [
+          "prob:2bba7423",
+          "prob:ce954558",
+          "prob:f39b8d40",
+          "prob:1d94dd19",
+          "prob:32a51c21",
+          "prob:48ecc838"
+        ],
+        "trace_issues": []
+      },
+      {
+        "heading": "Health",
+        "narrative": "1 health record(s) in scope:\n- health card for strategy f39b8d40",
+        "source": "fallback",
+        "evidence_ids": [
+          "health:f39b8d40"
+        ],
+        "trace_issues": []
+      }
+    ],
+    "traceability": {
+      "rule": "every number in an [llm] section traces to the cited evidence (or other in-scope records of the same kind); untraceable sections are replaced by deterministic summaries",
+      "sections_replaced": 0,
+      "discarded_sections": []
+    },
+    "disclaimer": "The LLM only narrates; the numbers ledger above is rendered directly from stored records. Research only \u2014 no live execution, no risk changes."
+  },
+  "pass2": {
+    "schema_version": 1,
+    "topic": "C3 live verification (persist)",
+    "generated_at": "2026-09-26T03:40:00.508386",
+    "scope": {
+      "experiment": 1,
+      "research_task": 10,
+      "probation": 9,
+      "health": 1
+    },
+    "evidence": [
+      {
+        "id": "exp:c04a0ab0",
+        "kind": "experiment",
+        "summary": "experiment c04a0ab0 on strategy f39b8d40: verdict FAIL",
+        "metrics": {}
+      },
+      {
+        "id": "task:20fcd565-7400-4251-948b-fe3948526f22",
+        "kind": "research_task",
+        "summary": "research task 20fcd565-7400-4251-948b-fe3948526f22: EUR/USD: FallbackTrend EUR/USD \u2014 COMPLETED",
+        "metrics": {}
+      },
+      {
+        "id": "task:e1fb1dc0-834e-49ea-9701-1caa2ab3690a",
+        "kind": "research_task",
+        "summary": "research task e1fb1dc0-834e-49ea-9701-1caa2ab3690a: GBP/JPY: FallbackTrend GBP/JPY \u2014 COMPLETED",
+        "metrics": {}
+      },
+      {
+        "id": "task:d4f7ca9e-4065-4fc0-a1b7-06d48ccb3c81",
+        "kind": "research_task",
+        "summary": "research task d4f7ca9e-4065-4fc0-a1b7-06d48ccb3c81: EUR/USD: FallbackTrend EUR/USD \u2014 COMPLETED",
+        "metrics": {}
+      },
+      {
+        "id": "task:d9277106-bda6-445c-87c8-9c76c60097b6",
+        "kind": "research_task",
+        "summary": "research task d9277106-bda6-445c-87c8-9c76c60097b6: EUR/USD: EUR/USD Bearish Trend Pullback Strategy \u2014 COMPLETED",
+        "metrics": {}
+      },
+      {
+        "id": "task:a94c1ffe-c749-47c9-8fa9-daa52ccf3db8",
+        "kind": "research_task",
+        "summary": "research task a94c1ffe-c749-47c9-8fa9-daa52ccf3db8: EUR/USD: EUR/USD Bearish Trend Pullback Strategy \u2014 COMPLETED",
+        "metrics": {}
+      },
+      {
+        "id": "task:fc779aa2-9e5b-41bf-aa76-42cb6600fc44",
+        "kind": "research_task",
+        "summary": "research task fc779aa2-9e5b-41bf-aa76-42cb6600fc44: EUR/USD: Bearish Trend Pullback Short on EUR/USD H1 \u2014 COMPLETED",
+        "metrics": {}
+      },
+      {
+        "id": "task:50a6ac4b-cf66-4764-876d-a371345e30c9",
+        "kind": "research_task",
+        "summary": "research task 50a6ac4b-cf66-4764-876d-a371345e30c9: EUR/USD: EUR/USD Bearish Trend Pullback \u2014 COMPLETED",
+        "metrics": {}
+      },
+      {
+        "id": "task:d6e159f1-4d6e-4b0b-af4f-679661058c6e",
+        "kind": "research_task",
+        "summary": "research task d6e159f1-4d6e-4b0b-af4f-679661058c6e: EUR/USD: EUR/USD Bearish Trend Pullback \u2014 COMPLETED",
+        "metrics": {}
+      },
+      {
+        "id": "task:853f1bd2-7d70-4447-b2e6-3abf32fb5e66",
+        "kind": "research_task",
+        "summary": "research task 853f1bd2-7d70-4447-b2e6-3abf32fb5e66: EUR/USD: EUR/USD Bearish Trend Pullback Short \u2014 COMPLETED",
+        "metrics": {}
+      },
+      {
+        "id": "task:3a6c2033-63c3-43ad-bc08-97093f161fc7",
+        "kind": "research_task",
+        "summary": "research task 3a6c2033-63c3-43ad-bc08-97093f161fc7: EUR/USD: Bearish Trend EMA Pullback \u2014 COMPLETED",
+        "metrics": {}
+      },
+      {
+        "id": "prob:2bba7423",
+        "kind": "probation",
+        "summary": "probation 2bba7423 (EUR/USD): rejected, 0/20 trades",
+        "metrics": {
+          "observed_trades": 0.0,
+          "required_trades": 20.0,
+          "progress": 0.0
+        }
+      },
+      {
+        "id": "prob:ce954558",
+        "kind": "probation",
+        "summary": "probation ce954558 (EUR/USD): rejected, 0/20 trades",
+        "metrics": {
+          "observed_trades": 0.0,
+          "required_trades": 20.0,
+          "progress": 0.0
+        }
+      },
+      {
+        "id": "prob:f39b8d40",
+        "kind": "probation",
+        "summary": "probation f39b8d40 (GBP/JPY): active, 0/5 trades",
+        "metrics": {
+          "observed_trades": 0.0,
+          "required_trades": 5.0,
+          "progress": 0.0
+        }
+      },
+      {
+        "id": "prob:1d94dd19",
+        "kind": "probation",
+        "summary": "probation 1d94dd19 (EUR/USD): rejected, 0/20 trades",
+        "metrics": {
+          "observed_trades": 0.0,
+          "required_trades": 20.0,
+          "progress": 0.0
+        }
+      },
+      {
+        "id": "prob:32a51c21",
+        "kind": "probation",
+        "summary": "probation 32a51c21 (EUR/USD): rejected, 0/20 trades",
+        "metrics": {
+          "observed_trades": 0.0,
+          "required_trades": 20.0,
+          "progress": 0.0
+        }
+      },
+      {
+        "id": "prob:48ecc838",
+        "kind": "probation",
+        "summary": "probation 48ecc838 (EUR/USD): rejected, 0/20 trades",
+        "metrics": {
+          "observed_trades": 0.0,
+          "required_trades": 20.0,
+          "progress": 0.0
+        }
+      },
+      {
+        "id": "prob:f51684ce",
+        "kind": "probation",
+        "summary": "probation f51684ce (EUR/USD): rejected, 0/20 trades",
+        "metrics": {
+          "observed_trades": 0.0,
+          "required_trades": 20.0,
+          "progress": 0.0
+        }
+      },
+      {
+        "id": "prob:337a589e",
+        "kind": "probation",
+        "summary": "probation 337a589e (EUR/USD): rejected, 0/20 trades",
+        "metrics": {
+          "observed_trades": 0.0,
+          "required_trades": 20.0,
+          "progress": 0.0
+        }
+      },
+      {
+        "id": "prob:83dd89bf",
+        "kind": "probation",
+        "summary": "probation 83dd89bf (EUR/USD): rejected, 0/20 trades",
+        "metrics": {
+          "observed_trades": 0.0,
+          "required_trades": 20.0,
+          "progress": 0.0
+        }
+      },
+      {
+        "id": "health:f39b8d40",
+        "kind": "health",
+        "summary": "health card for strategy f39b8d40",
+        "metrics": {}
+      }
+    ],
+    "title": "C3 Live Verification Report",
+    "summary": "This report details the research tasks and probation statuses for EUR/USD and GBP/JPY strategies. Multiple research tasks for bearish trend pullbacks and fallback trends have been completed. Most probation records for EUR/USD were rejected, while one GBP/JPY probation remains active.",
+    "llm_used": true,
+    "llm_error": null,
+    "sections": [
+      {
+        "heading": "Probation and Strategy Performance",
+        "narrative": "Several EUR/USD probations were rejected with 0/20 trades observed (prob:2bba7423, prob:ce954558, prob:1d94dd19, prob:32a51c21, prob:48ecc838, prob:f51684ce, prob:337a589e, prob:83dd89bf). For GBP/JPY, probation prob:f39b8d40 remains active with 0/5 trades observed. Strategy f39b8d40 has a corresponding health card (health:f39b8d40), though experiment exp:c04a0ab0 on this strategy resulted in a FAIL verdict.",
+        "source": "llm",
+        "evidence_ids": [
+          "prob:2bba7423",
+          "prob:ce954558",
+          "prob:f39b8d40",
+          "prob:1d94dd19",
+          "prob:32a51c21",
+          "prob:48ecc838",
+          "prob:f51684ce",
+          "prob:337a589e",
+          "prob:83dd89bf",
+          "health:f39b8d40",
+          "exp:c04a0ab0"
+        ],
+        "trace_issues": []
+      },
+      {
+        "heading": "Research Task Completion",
+        "narrative": "Research tasks for EUR/USD focused on FallbackTrend (task:20fcd565-7400-4251-948b-fe3948526f22, task:d4f7ca9e-4065-4fc0-a1b7-06d48ccb3c81), Bearish Trend Pullback strategies (task:d9277106-bda6-445c-87c8-9c76c60097b6, task:a94c1ffe-c749-47c9-8fa9-daa52ccf3db8, task:50a6ac4b-cf66-4764-876d-a371345e30c9, task:d6e159f1-4d6e-4b0b-af4f-679661058c6e), and specific variations including H1 shorts (task:fc779aa2-9e5b-41bf-aa76-42cb6600fc44), general shorts (task:853f1bd2-7d70-4447-b2e6-3abf32fb5e66), and EMA pullbacks (task:3a6c2033-63c3-43ad-bc08-97093f161fc7) have all been completed. Additionally, the FallbackTrend task for GBP/JPY (task:e1fb1dc0-834e-49ea-9701-1caa2ab3690a) is completed.",
+        "source": "llm",
+        "evidence_ids": [
+          "task:20fcd565-7400-4251-948b-fe3948526f22",
+          "task:e1fb1dc0-834e-49ea-9701-1caa2ab3690a",
+          "task:d4f7ca9e-4065-4fc0-a1b7-06d48ccb3c81",
+          "task:d9277106-bda6-445c-87c8-9c76c60097b6",
+          "task:a94c1ffe-c749-47c9-8fa9-daa52ccf3db8",
+          "task:fc779aa2-9e5b-41bf-aa76-42cb6600fc44",
+          "task:50a6ac4b-cf66-4764-876d-a371345e30c9",
+          "task:d6e159f1-4d6e-4b0b-af4f-679661058c6e",
+          "task:853f1bd2-7d70-4447-b2e6-3abf32fb5e66",
+          "task:3a6c2033-63c3-43ad-bc08-97093f161fc7"
+        ],
+        "trace_issues": []
+      },
+      {
+        "heading": "Probation",
+        "narrative": "9 probation record(s) in scope:\n- probation 2bba7423 (EUR/USD): rejected, 0/20 trades [observed_trades=0, progress=0, required_trades=20]\n- probation ce954558 (EUR/USD): rejected, 0/20 trades [observed_trades=0, progress=0, required_trades=20]\n- probation f39b8d40 (GBP/JPY): active, 0/5 trades [observed_trades=0, progress=0, required_trades=5]\n- probation 1d94dd19 (EUR/USD): rejected, 0/20 trades [observed_trades=0, progress=0, required_trades=20]\n- probation 32a51c21 (EUR/USD): rejected, 0/20 trades [observed_trades=0, progress=0, required_trades=20]\n- probation 48ecc838 (EUR/USD): rejected, 0/20 trades [observed_trades=0, progress=0, required_trades=20]",
+        "source": "fallback",
+        "evidence_ids": [
+          "prob:2bba7423",
+          "prob:ce954558",
+          "prob:f39b8d40",
+          "prob:1d94dd19",
+          "prob:32a51c21",
+          "prob:48ecc838"
+        ],
+        "trace_issues": []
+      },
+      {
+        "heading": "Health",
+        "narrative": "1 health record(s) in scope:\n- health card for strategy f39b8d40",
+        "source": "fallback",
+        "evidence_ids": [
+          "health:f39b8d40"
+        ],
+        "trace_issues": []
+      }
+    ],
+    "traceability": {
+      "rule": "every number in an [llm] section traces to the cited evidence (or other in-scope records of the same kind); untraceable sections are replaced by deterministic summaries",
+      "sections_replaced": 0,
+      "discarded_sections": []
+    },
+    "disclaimer": "The LLM only narrates; the numbers ledger above is rendered directly from stored records. Research only \u2014 no live execution, no risk changes.",
+    "report_id": "2d939243-9dca-431d-8168-ce354c0e3a68"
+  }
+}

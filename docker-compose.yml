@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: forex-postgres
+    environment:
+      POSTGRES_DB: forex_ai
+      POSTGRES_USER: forex_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-forex_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U forex_user -d forex_ai"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: forex-redis
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: forex-app
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://forex_user:${POSTGRES_PASSWORD:-forex_password}@postgres:5432/forex_ai
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=development
+      - PYTHONPATH=/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../src:/app/src
+      - ../logs:/app/logs
+    command: python -m forex_ai_agent.main
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:

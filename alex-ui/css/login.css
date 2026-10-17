@@ -1,0 +1,84 @@
+/* ==========================================================================
+   ALEX OS — Boot & auth visuals + login page state
+   ========================================================================== */
+
+/* Login overlay — shown via .open (pure CSS state) */
+#login-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 800;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(1200px 600px at 70% -10%, rgba(79, 184, 255, 0.09), transparent 60%),
+    radial-gradient(1000px 700px at 20% 110%, rgba(47, 214, 163, 0.08), transparent 60%),
+    var(--bg-primary);
+}
+#login-overlay.open { display: flex; }
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-lg);
+  padding: var(--sp-8);
+  box-shadow: var(--shadow-lg);
+}
+.login-logo {
+  width: 52px; height: 52px;
+  margin: 0 auto var(--sp-4);
+  border-radius: 14px;
+  background: linear-gradient(135deg, #2FD6A3, #4FB8FF);
+  display: grid;
+  place-items: center;
+  font-weight: var(--fw-bold);
+  color: #06251B;
+  font-size: 1.5rem;
+  box-shadow: var(--glow);
+}
+.login-title { text-align: center; font-size: var(--fs-lg); margin-bottom: 4px; }
+.login-sub { text-align: center; color: var(--text-muted); font-size: var(--fs-sm); margin-bottom: var(--sp-6); }
+.login-error {
+  display: none;
+  background: var(--danger-dim);
+  border: 1px solid rgba(255, 107, 126, 0.35);
+  color: var(--danger);
+  border-radius: var(--r-sm);
+  padding: 8px 12px;
+  font-size: var(--fs-sm);
+  margin-bottom: var(--sp-4);
+}
+.login-error.show { display: block; }
+.login-card .btn-primary { width: 100%; justify-content: center; padding: 10px; margin-top: var(--sp-2); }
+
+/* Boot watchdog banner (red bar when the app fails to start) */
+#boot-banner {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: var(--z-boot-banner);
+  display: none;
+  align-items: center;
+  gap: var(--sp-3);
+  background: var(--danger);
+  color: #1A0509;
+  padding: 10px 16px;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+}
+#boot-banner.show { display: flex; }
+#boot-banner button {
+  margin-left: auto;
+  border: 0;
+  border-radius: var(--r-sm);
+  padding: 6px 14px;
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+  background: #1A0509;
+  color: #fff;
+}
+
+/* Page load shimmer guard: main content starts visible (never JS-hidden) */
+.main.loading .space-body { opacity: 0.55; }
+.main .space-body { transition: opacity var(--t-fast); }

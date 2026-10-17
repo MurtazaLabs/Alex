@@ -1,0 +1,179 @@
+/* ==========================================================================
+   ALEX OS — Base reset & elements
+   ========================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  line-height: 1.55;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+h1, h2, h3, h4, h5 { margin: 0; font-weight: var(--fw-semibold); line-height: 1.25; }
+p { margin: 0 0 var(--sp-3); }
+a { color: var(--accent-2); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code, .mono {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-sm);
+  padding: 1px 6px;
+}
+
+/* Text selection is always allowed */
+* { user-select: text; }
+button, [role="button"] { user-select: none; }
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 8px 16px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-sm);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font: inherit;
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
+  white-space: nowrap;
+}
+.btn:hover { background: var(--bg-hover); border-color: var(--border-strong); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn-primary {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent-soft);
+}
+.btn-primary:hover { background: rgba(47, 214, 163, 0.22); border-color: var(--accent-soft); }
+
+.btn-danger {
+  background: var(--danger-dim);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.btn-danger:hover { background: rgba(255, 107, 126, 0.24); }
+
+.btn-sm { padding: 5px 11px; font-size: var(--fs-sm); }
+.btn-icon { padding: 8px; line-height: 1; }
+
+/* ==========================================================================
+   Forms
+   ========================================================================== */
+
+.field { margin-bottom: var(--sp-4); }
+.field label {
+  display: block;
+  margin-bottom: var(--sp-1);
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+  font-weight: var(--fw-medium);
+}
+
+.input, select.input, textarea.input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-sm);
+  background: var(--bg-panel);
+  color: var(--text-primary);
+  font: inherit;
+  transition: border-color var(--t-fast), background var(--t-fast);
+}
+.input:focus { outline: none; border-color: var(--accent); background: var(--bg-elevated); }
+.input::placeholder { color: var(--text-muted); }
+select.input { cursor: pointer; }
+
+.form-row { display: flex; gap: var(--sp-3); }
+.form-row .field { flex: 1; }
+.field .hint { margin-top: 4px; font-size: var(--fs-xs); color: var(--text-muted); }
+
+/* ==========================================================================
+   Badges & chips
+   ========================================================================== */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border-radius: var(--r-full);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+}
+.badge-success { background: var(--accent-dim); color: var(--accent-soft); border-color: rgba(47,214,163,.35); }
+.badge-danger  { background: var(--danger-dim); color: var(--danger); border-color: rgba(255,107,126,.35); }
+.badge-warning { background: var(--warning-dim); color: var(--warning); border-color: rgba(242,183,92,.35); }
+.badge-info    { background: var(--accent-2-dim); color: var(--accent-2); border-color: rgba(79,184,255,.35); }
+.badge-muted   { background: var(--bg-elevated); color: var(--text-secondary); border-color: var(--border-default); }
+
+.badge-long  { background: var(--long-dim); color: var(--long); }
+.badge-short { background: var(--short-dim); color: var(--short); }
+
+/* Status dot */
+.dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  display: inline-block;
+  flex-shrink: 0;
+}
+.dot-ok   { background: var(--success); box-shadow: 0 0 8px rgba(47,214,163,.6); }
+.dot-warn { background: var(--warning); }
+.dot-bad  { background: var(--danger); }
+
+/* ==========================================================================
+   Utility
+   ========================================================================== */
+
+.hidden { display: none !important; }
+.text-muted { color: var(--text-muted); }
+.text-secondary { color: var(--text-secondary); }
+.text-right { text-align: right; }
+.mt-2 { margin-top: var(--sp-2); }
+.mt-4 { margin-top: var(--sp-4); }
+.mb-4 { margin-bottom: var(--sp-4); }
+.flex { display: flex; align-items: center; gap: var(--sp-3); }
+.flex-between { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); }
+.grow { flex: 1; }
+.nowrap { white-space: nowrap; }
+
+/* Empty & loading states */
+.empty-state {
+  padding: var(--sp-10) var(--sp-6);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--fs-md);
+}
+.empty-state .big { font-size: 2rem; display: block; margin-bottom: var(--sp-3); }
+.skeleton {
+  height: 14px;
+  border-radius: var(--r-sm);
+  background: linear-gradient(90deg, var(--bg-elevated) 25%, var(--bg-hover) 50%, var(--bg-elevated) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  margin-bottom: var(--sp-3);
+}
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }

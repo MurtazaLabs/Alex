@@ -1,0 +1,226 @@
+{
+  "summary": {
+    "hypotheses_enqueued": 1,
+    "director_cycles": 2,
+    "versions_created": [],
+    "experiments_run": 1,
+    "report_id": "18f5c982-8187-409b-a089-cf4bb76fbf24",
+    "llm_calls_used": 4,
+    "llm_budget": 5
+  },
+  "hypotheses": {
+    "generated_at": "2026-09-30T04:14:45.012371",
+    "timeframe": "H1",
+    "pairs_scanned": [
+      "EUR/USD"
+    ],
+    "llm_used": true,
+    "llm_error": null,
+    "fallback_used": false,
+    "lessons_used": 5,
+    "successes_used": 1,
+    "raw_candidates": 1,
+    "accepted": [
+      {
+        "pair": "EUR/USD",
+        "text": "In a bearish H1 trend, enter LONG when price crosses above the last CHoCH level (1.13878) following a successful BOS to the downside, targeting the key resistance at 1.16354.",
+        "rationale": "The current brief shows a bearish trend but a recent bullish CHoCH. Past successes indicate 'long' direction with 'crosses_above' on H1 is a validated spec shape, making a mean-reversion test against the trend plausible.",
+        "confidence": 0.65,
+        "expected_regime": "volatile",
+        "source": "llm",
+        "enqueued": true,
+        "item_id": "4736d9fa-3a7e-4780-9afe-8230e57d3023"
+      }
+    ],
+    "rejected": [],
+    "enqueued_count": 1,
+    "schema_version": 1,
+    "disclaimer": "The LLM chose what to research; deterministic code validated every candidate and the backtest gate owns every outcome. Research only \u2014 no live execution, no risk changes."
+  },
+  "cycles": 2,
+  "experiments": {
+    "generated_at": "2026-09-30T04:14:56.155622",
+    "timeframe": "H1",
+    "period": "2025-01-01..2025-12-31",
+    "strategies_seen": 2,
+    "llm_used": true,
+    "llm_error": null,
+    "fallback_used": false,
+    "raw_proposals": 1,
+    "accepted": [
+      {
+        "source": "llm",
+        "strategy_id": "24ae524d",
+        "parameter_mutations": {
+          "atr_sl_mult": 1.5,
+          "atr_tp_mult": 3.0
+        },
+        "experiment": {
+          "experiment_id": "13ec7e5c",
+          "verdict": "FAIL",
+          "recommendation": "No variant improved over baseline. Do not adopt changes.",
+          "baseline_metrics": {
+            "trades": {
+              "win_rate": 0.32727272727272727,
+              "avg_win": 1452.495758068657,
+              "avg_loss": -928.1949107046374,
+              "profit_factor": 0.7612835944585364,
+              "expectancy": -149.05978274246826,
+              "avg_r_multiple": 0,
+              "max_consecutive_wins": 4,
+              "max_consecutive_losses": 10,
+              "avg_hold_time_hours": 0.0,
+              "total_trades": 110,
+              "winning_trades": 36,
+              "losing_trades": 74,
+              "gross_profit": 52289.847290471655,
+              "gross_loss": 68686.42339214317
+            },
+            "portfolio": {
+              "total_return": -0.16396576101671498,
+              "annualized_return": -0.16530886830056446,
+              "volatility": 0.14052335039781425,
+              "sharpe_ratio": -0.8133281575028471,
+              "sortino_ratio": -0.9244158832980862,
+              "calmar_ratio": -0.7358889836539533,
+              "max_drawdown": 22463.832449257025,
+              "max_drawdown_pct": 22.463832449257023,
+              "max_drawdown_duration_days": 6137,
+              "avg_drawdown": 12.469213452675538,
+              "recovery_factor": 0.7299100070617648,
+              "ulcer_index": 13.980972490926174
+            },
+            "risk": {
+              "var_95": -0.014799120823411472,
+              "var_99": -0.028875884758594535,
+              "cvar_95": -0.021316052556627635,
+              "cvar_99": -0.03326313462442734,
+              "tail_ratio": 0.994046782684797,
+              "omega_ratio": 0.8059569381800803,
+              "gain_to_pain_ratio": 0.8059569381800803
+            },
+            "breakdowns": {
+              "by_symbol": {
+                "EUR/USD": {
+                  "trades": 110,
+                  "win_rate": 0.32727272727272727,
+                  "total_profit": -16396.57610167151,
+                  "avg_profit": -149.0597827424683
+                }
+              },
+              "by_side": {
+                "BUY": {
+                  "trades": 110,
+                  "win_rate": 0.32727272727272727,
+                  "total_profit": -16396.57610167151
+                }
+              },
+              "by_hour": {
+                "4": {
+                  "trades": 110,
+                  "win_rate": 0.32727272727272727,
+                  "total_profit": -16396.57610167151
+                }
+              },
+              "by_dow": {
+                "Wed": {
+                  "trades": 110,
+                  "win_rate": 0.32727272727272727,
+                  "total_profit": -16396.57610167151
+                }
+              },
+              "by_month": {
+                "9": {
+                  "trades": 110,
+                  "win_rate": 0.32727272727272727,
+                  "total_profit": -16396.57610167151
+                }
+              }
+            },
+            "summary": {
+              "total_trades": 110,
+              "win_rate": 0.32727272727272727,
+              "profit_factor": 0.7612835944585364,
+              "expectancy": -149.05978274246826,
+              "sharpe_ratio": -0.8133281575028471,
+              "sortino_ratio": -0.9244158832980862,
+              "calmar_ratio": -0.7358889836539533,
+              "max_drawdown_pct": 22.463832449257023,
+              "total_return_pct": -0.16396576101671498,
+              "annualized_return": -0.16530886830056446
+            }
+          },
+          "variant_count": 2
+        },
+        "status": "RUN",
+        "rationale": "Initial baseline test for the EMA Trend Follower strategy using default parameters to establish a performance benchmark before exploring the parameter space.",
+        "confidence": 1.0
+      }
+    ],
+    "rejected": [],
+    "disclaimer": "The LLM chose what to test; deterministic code executed every experiment and owns every number. Research only \u2014 no live execution, no risk changes."
+  },
+  "report": {
+    "report_id": "18f5c982-8187-409b-a089-cf4bb76fbf24",
+    "title": "Research Report: Unattended Session 2026-09-30 04:14",
+    "llm_used": true,
+    "sections": [
+      {
+        "heading": "Probation and Experiment Results",
+        "narrative": "1 experiment record(s) in scope:\n- experiment 13ec7e5c on strategy 24ae524d: verdict FAIL",
+        "source": "fallback",
+        "evidence_ids": [
+          "exp:13ec7e5c"
+        ],
+        "trace_issues": [
+          "524"
+        ]
+      },
+      {
+        "heading": "EUR/USD Strategy Research",
+        "narrative": "Several research tasks focused on EUR/USD were completed, including Bearish Trend Continuation (d787c451-bd25-475e-95be-77d401d62352), FallbackTrend (20fcd565-7400-4251-948b-fe3948526f22, d4f7ca9e-4065-4fc0-a1b7-06d48ccb3c81), and various Bearish Trend Pullback strategies (d9277106-bda6-445c-87c8-9c76c60097b6, a94c1ffe-c749-47c9-8fa9-daa52ccf3db8, fc779aa2-9e5b-41bf-aa76-42cb6600fc44, 50a6ac4b-cf66-4764-876d-a371345e30c9, d6e159f1-4d6e-4b0b-af4f-679661058c6e, 853f1bd2-7d70-4447-b2e6-3abf32fb5e66).",
+        "source": "llm",
+        "evidence_ids": [
+          "task:d787c451-bd25-475e-95be-77d401d62352",
+          "task:20fcd565-7400-4251-948b-fe3948526f22",
+          "task:d4f7ca9e-4065-4fc0-a1b7-06d48ccb3c81",
+          "task:d9277106-bda6-445c-87c8-9c76c60097b6",
+          "task:a94c1ffe-c749-47c9-8fa9-daa52ccf3db8",
+          "task:fc779aa2-9e5b-41bf-aa76-42cb6600fc44",
+          "task:50a6ac4b-cf66-4764-876d-a371345e30c9",
+          "task:d6e159f1-4d6e-4b0b-af4f-679661058c6e",
+          "task:853f1bd2-7d70-4447-b2e6-3abf32fb5e66"
+        ],
+        "trace_issues": []
+      },
+      {
+        "heading": "Probation",
+        "narrative": "9 probation record(s) in scope:\n- probation 2bba7423 (EUR/USD): rejected, 0/20 trades [observed_trades=0, progress=0, required_trades=20]\n- probation ce954558 (EUR/USD): rejected, 0/20 trades [observed_trades=0, progress=0, required_trades=20]\n- probation f39b8d40 (GBP/JPY): active, 0/5 trades [observed_trades=0, progress=0, required_trades=5]\n- probation 1d94dd19 (EUR/USD): rejected, 0/20 trades [observed_trades=0, progress=0, required_trades=20]\n- probation 32a51c21 (EUR/USD): rejected, 0/20 trades [observed_trades=0, progress=0, required_trades=20]\n- probation 48ecc838 (EUR/USD): rejected, 0/20 trades [observed_trades=0, progress=0, required_trades=20]",
+        "source": "fallback",
+        "evidence_ids": [
+          "prob:2bba7423",
+          "prob:ce954558",
+          "prob:f39b8d40",
+          "prob:1d94dd19",
+          "prob:32a51c21",
+          "prob:48ecc838"
+        ],
+        "trace_issues": []
+      },
+      {
+        "heading": "Health",
+        "narrative": "1 health record(s) in scope:\n- health card for strategy 24ae524d",
+        "source": "fallback",
+        "evidence_ids": [
+          "health:24ae524d"
+        ],
+        "trace_issues": []
+      }
+    ],
+    "traceability": {
+      "rule": "every number in an [llm] section traces to the cited evidence (or other in-scope records of the same kind); untraceable sections are replaced by deterministic summaries",
+      "sections_replaced": 1,
+      "discarded_sections": []
+    }
+  }
+}

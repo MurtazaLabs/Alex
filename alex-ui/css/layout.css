@@ -1,0 +1,193 @@
+/* ==========================================================================
+   ALEX OS — App layout: sidebar / topbar / main / statusbar
+   ========================================================================== */
+
+#app {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  grid-template-rows: var(--topbar-h) 1fr var(--statusbar-h);
+  grid-template-areas:
+    "sidebar topbar"
+    "sidebar main"
+    "sidebar statusbar";
+  height: 100vh;
+  width: 100vw;
+}
+
+/* ==========================================================================
+   Sidebar
+   ========================================================================== */
+
+.sidebar {
+  grid-area: sidebar;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-subtle);
+  z-index: var(--z-sidebar);
+  min-height: 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.brand-logo {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #2FD6A3, #4FB8FF);
+  display: grid;
+  place-items: center;
+  font-weight: var(--fw-bold);
+  color: #06251B;
+  font-size: 1.1rem;
+  box-shadow: var(--glow);
+}
+.brand-name { font-size: var(--fs-md); font-weight: var(--fw-bold); letter-spacing: 0.02em; }
+.brand-sub { font-size: var(--fs-xs); color: var(--text-muted); }
+
+.nav { flex: 1; padding: var(--sp-4) var(--sp-3); overflow-y: auto; min-height: 0; }
+.nav-label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  padding: var(--sp-3) var(--sp-3) var(--sp-2);
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  padding: 9px 12px;
+  margin-bottom: 2px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.nav-item .ico { width: 20px; text-align: center; flex-shrink: 0; }
+.nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+.nav-item.active {
+  background: var(--accent-dim);
+  color: var(--accent-soft);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.nav-item .nav-badge {
+  margin-left: auto;
+  font-size: 0.6875rem;
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  border-radius: var(--r-full);
+  padding: 1px 7px;
+}
+.nav-item.active .nav-badge { background: rgba(47,214,163,.22); color: var(--accent-soft); }
+
+.sidebar-foot {
+  padding: var(--sp-3) var(--sp-4);
+  border-top: 1px solid var(--border-subtle);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+.sidebar-foot .flex { gap: var(--sp-2); }
+
+/* ==========================================================================
+   Topbar
+   ========================================================================== */
+
+.topbar {
+  grid-area: topbar;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: 0 var(--sp-6);
+  background: rgba(14, 17, 24, 0.85);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border-subtle);
+  z-index: var(--z-topbar);
+}
+.topbar-title { font-size: var(--fs-lg); font-weight: var(--fw-semibold); }
+.topbar-sub { font-size: var(--fs-sm); color: var(--text-muted); }
+.topbar-actions { margin-left: auto; display: flex; align-items: center; gap: var(--sp-2); }
+
+/* ==========================================================================
+   Main content area
+   ========================================================================== */
+
+.main {
+  grid-area: main;
+  overflow-y: auto;
+  padding: var(--sp-6);
+  min-height: 0;
+  background: var(--bg-primary);
+}
+
+/* Space transition — pure CSS, visibility never depends on it */
+.space-body { max-width: 1200px; margin: 0 auto; }
+@keyframes space-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.space-enter { animation: space-in var(--t-normal) ease-out; }
+
+.space-header { margin-bottom: var(--sp-6); }
+.space-header h1 {
+  font-size: var(--fs-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.space-header .ico { color: var(--accent); }
+.space-header-sub { color: var(--text-muted); font-size: var(--fs-sm); margin-top: 2px; }
+
+/* ==========================================================================
+   Status bar (bottom)
+   ========================================================================== */
+
+.statusbar {
+  grid-area: statusbar;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  padding: 0 var(--sp-5);
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-subtle);
+  font-size: var(--fs-xs);
+  color: var(--text-secondary);
+  z-index: var(--z-statusbar);
+}
+.statusbar .sb-item { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.statusbar .sb-sep { width: 1px; height: 14px; background: var(--border-default); }
+.statusbar .mono { font-size: var(--fs-xs); }
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+
+@media (max-width: 900px) {
+  #app {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "topbar" "main" "statusbar";
+  }
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: var(--sidebar-w);
+    transform: translateX(-100%);
+    transition: transform var(--t-normal);
+    box-shadow: var(--shadow-lg);
+  }
+  .sidebar.open { transform: translateX(0); }
+  .nav-toggle { display: inline-flex !important; }
+  .main { padding: var(--sp-4); }
+}
+.nav-toggle { display: none; }

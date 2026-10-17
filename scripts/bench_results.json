@@ -1,0 +1,11 @@
+[
+  {
+    "model": "deepseek/deepseek-v4-flash",
+    "latency_s": 8.1,
+    "parse": true,
+    "accepted": 1,
+    "rejected": 0,
+    "grade": "PASS",
+    "detail": "After a bullish BOS/CHoCH within a bearish trend on H1, price will fail to sustain above 1.13912 and return to\u2026"
+  }
+]

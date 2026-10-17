@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+.venv*/
+venv/
+.env
+
+# Tests / tooling
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+.mypy_cache/
+.tox/
+.agents/
+.freebuff/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Local data
+*.sqlite3
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+data/
+logs/
+
+# Runtime strategy registry state (code ships; live state does not)
+strategies/versions/
+strategy_versions/
+
+# Private (never publish): personal profile + internal session documentation
+user.md
+docs/Forex docmentation/
+
+# Credential files must never be committed
+login.json
+*.secret.json
+*.credentials.json
