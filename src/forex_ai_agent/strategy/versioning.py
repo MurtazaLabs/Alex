@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import hashlib
+import hmac
 import difflib
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
@@ -23,6 +24,21 @@ class VersionType(Enum):
     MINOR = "minor"      # New features, backward compatible
     PATCH = "patch"      # Bug fixes, backward compatible
     EXPERIMENTAL = "experimental"  # Experimental changes
+
+
+def spec_hash(rules: Dict[str, Any], parameters: Dict[str, Any]) -> str:
+    """SHA-256 over the canonical spec payload (rules + parameters).
+
+    This is the pin a human approves. The live window refuses to start
+    (and the runner refuses to run) when the version's spec no longer
+    matches the approved hash -- any edit to the spec forces a fresh
+    human approval.
+    """
+    payload = json.dumps(
+        {"rules": rules or {}, "parameters": parameters or {}},
+        sort_keys=True, separators=(",", ":"), default=str,
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 @dataclass
@@ -52,7 +68,11 @@ class StrategyVersion:
     # Performance tracking
     backtest_results: Dict[str, Any] = field(default_factory=dict)
     live_results: Dict[str, Any] = field(default_factory=dict)
-    
+
+    # Human approval pin (set by StrategyVersionManager.approve(); empty
+    # until a human approves this exact spec hash).
+    approval: Dict[str, Any] = field(default_factory=dict)
+
     def bump_version(self, change_type: VersionType) -> str:
         """Bump version according to semantic versioning."""
         major, minor, patch = map(int, self.version.split("."))
@@ -246,6 +266,43 @@ class StrategyVersionManager:
             )))
         return True
     
+    def approve(self, version_id: str, approver: str = "human") -> Optional[StrategyVersion]:
+        """HUMAN action: activate a version and pin its exact spec hash.
+
+        Records WHO approved this exact rules+parameters payload. Any
+        later edit to the spec invalidates the pin (``verify_pin`` fails),
+        so a live window can never run a spec the human did not see.
+        """
+        version = self.versions.get(version_id)
+        if not version:
+            return None
+        prior = version.status
+        self.set_active(version_id)
+        version.approval = {
+            "approved_by": str(approver),
+            "approved_at": datetime.utcnow().isoformat(),
+            "spec_hash": spec_hash(version.rules, version.parameters),
+            "prior_status": prior,
+        }
+        version.updated_at = datetime.utcnow()
+        self._save_version(version)
+        return version
+
+    def verify_pin(self, version_id: str) -> bool:
+        """True only if the stored approval hash matches the CURRENT spec.
+
+        Fails closed: missing version, missing approval, or any edit to
+        rules/parameters all return False.
+        """
+        version = self.versions.get(version_id)
+        if not version:
+            return False
+        pinned = str((version.approval or {}).get("spec_hash", ""))
+        if not pinned:
+            return False
+        current = spec_hash(version.rules, version.parameters)
+        return hmac.compare_digest(pinned, current)
+
     def get_active(self) -> Optional[StrategyVersion]:
         """Get the currently active version."""
         if self.active_version_id:

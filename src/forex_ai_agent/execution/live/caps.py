@@ -1,20 +1,31 @@
 """Stage E4: live deployment hard caps — deterministic constants in code.
 
 These are the NON-NEGOTIABLE limits for the extremely limited live
-deployment window. They are reviewed by the human operator and confirmed
-in the research log (2026-10-16). They cannot be changed by any tool, LLM
-call, or agent handler. Changing them requires a code edit reviewed by the
-human.
+deployment window. They are reviewed by the human operator and, since
+2026-10-18, mirror "Personal Trading Mandate v1.0"
+(ALEX_TRADING_MANDATE.md): 0.25% per trade, 0.75% aggregate stop risk,
+1% daily halt, 2% weekly halt, 5% drawdown halt, max 3 positions. The
+machine-readable source of truth is execution/risk_mandate.py; changing
+values requires a code edit reviewed by the human.
 
 This module is pure data: no network, no broker, no LLM. The transmitter
 and the daily report both read caps from here, so a breach can always be
 traced to a single constant.
+
+Note on the lot band: ``min_lot``/``max_lot`` (0.01) reflect the current
+$100 STANDARD demo account, where the mandatory per-trade risk budget
+($0.25) is smaller than one minimum lot ($1.00 at a 10-pip stop) -- the
+policy therefore refuses every trade, correctly. Deploying on a cent
+account (planned) widens this band to the sizes the mandate can express;
+that is a reviewed code edit, not a config change.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, Dict
+
+from ..risk_mandate import ACTIVE_MANDATE
 
 __all__ = [
     "E4_PAIR",
@@ -50,11 +61,11 @@ def new_york_window() -> tuple:
 class LiveCaps:
     """E4 caps. Frozen dataclass — every value a named constant.
 
-    CONFIRMED 2026-10-16: EUR/USD only, min-lot volumes (0.01), <= 3
-    concurrent positions, 5% risk per trade ($5.00 on $100), 15% daily
-    loss cap ($15.00, auto-halt), London/NY sessions only, +/-30 min news
-    blackout. Weekly loss cap value is PROPOSED (25%) pending the same
-    sign-off that opens the window.
+    Mandate v1.0 (approved 2026-10-18): EUR/USD only, <= 3 concurrent
+    positions, 0.25% risk per trade, 0.75% aggregate open stop risk,
+    1% daily loss halt, 2% weekly loss halt, 5% drawdown halt from the
+    equity high-water mark, London/NY sessions only, +/-30 min news
+    blackout.
     """
 
     #: The single tradable pair for the window.
@@ -63,13 +74,19 @@ class LiveCaps:
     min_lot: float = 0.01
     max_lot: float = 0.01
     #: Concurrent open positions on the pair.
-    max_concurrent_positions: int = 3
+    max_concurrent_positions: int = ACTIVE_MANDATE.max_concurrent_positions
     #: Per-trade risk ceiling as % of equity (must match PolicyCaps).
-    max_risk_per_trade_pct: float = 5.0
-    #: Daily loss ceiling as % of equity (auto-halt).
-    max_daily_loss_pct: float = 15.0
-    #: Weekly loss ceiling as % of equity (PROPOSED 25%, pending sign-off).
-    max_weekly_loss_pct: float = 25.0
+    max_risk_per_trade_pct: float = ACTIVE_MANDATE.max_risk_per_trade_pct
+    #: Aggregate open stop risk ceiling as % of equity (must match PolicyCaps).
+    max_aggregate_stop_risk_pct: float = (
+        ACTIVE_MANDATE.max_aggregate_stop_risk_pct
+    )
+    #: Daily loss ceiling as % of the day's starting equity (auto-halt).
+    max_daily_loss_pct: float = ACTIVE_MANDATE.max_daily_loss_pct
+    #: Weekly loss ceiling as % of the week's starting equity (auto-halt).
+    max_weekly_loss_pct: float = ACTIVE_MANDATE.max_weekly_loss_pct
+    #: Drawdown halt from the equity high-water mark (persists until clear).
+    max_drawdown_pct: float = ACTIVE_MANDATE.max_drawdown_pct
     #: News blackout half-window in minutes (before AND after each event).
     news_blackout_minutes: int = 30
     #: Unfilled order expiry in seconds (cancel after this).
@@ -88,8 +105,10 @@ class LiveCaps:
             "max_lot": self.max_lot,
             "max_concurrent_positions": self.max_concurrent_positions,
             "max_risk_per_trade_pct": self.max_risk_per_trade_pct,
+            "max_aggregate_stop_risk_pct": self.max_aggregate_stop_risk_pct,
             "max_daily_loss_pct": self.max_daily_loss_pct,
             "max_weekly_loss_pct": self.max_weekly_loss_pct,
+            "max_drawdown_pct": self.max_drawdown_pct,
             "news_blackout_minutes": self.news_blackout_minutes,
             "order_expiry_seconds": self.order_expiry_seconds,
             "fill_drift_tolerance_pips": self.fill_drift_tolerance_pips,

@@ -1,9 +1,11 @@
 """Unit tests for Stage E3: execution policy + approval tokens.
 
-Pins the E3 gate:
-- PolicyCaps defaults are the hard-coded E3 constants (0.5% risk, 1.5% daily, 3 positions)
+Pins the E3 gate under mandate v1.0 (approved 2026-10-18):
+- PolicyCaps defaults are the mandate constants (0.25% risk, 0.75% aggregate,
+  1.0% daily, 2.0% weekly, 5.0% drawdown, 3 positions)
 - OrderIntent fields are computed deterministically (sizing, SL pips, R:R)
-- Policy refuses intents that violate any cap
+- Policy refuses intents that violate any cap (incl. unverified open risk,
+  aggregate stop risk, and the min-lot budget floor)
 - ApprovalTokens are single-use, intent-bound, expiring
 - Source-scan: no agent/LLM path can reach the token grant
 """
@@ -24,6 +26,9 @@ from forex_ai_agent.execution.policy import (
     INTENT_REFUSED_RISK_CAP,
     INTENT_REFUSED_POSITION_CAP,
     INTENT_REFUSED_DAILY_LOSS,
+    INTENT_REFUSED_AGGREGATE_RISK,
+    INTENT_REFUSED_UNVERIFIED_RISK,
+    INTENT_REFUSED_RISK_BUDGET,
     INTENT_REFUSED_UNTRADEABLE,
 )
 from forex_ai_agent.execution.tokens import (
@@ -43,11 +48,23 @@ from forex_ai_agent.execution.tokens import (
 class TestPolicyCaps:
     def test_default_risk_cap(self):
         caps = PolicyCaps()
-        assert caps.max_risk_per_trade_pct == 5.0
+        assert caps.max_risk_per_trade_pct == 0.25
+
+    def test_default_aggregate_risk_cap(self):
+        caps = PolicyCaps()
+        assert caps.max_aggregate_stop_risk_pct == 0.75
 
     def test_default_daily_loss_cap(self):
         caps = PolicyCaps()
-        assert caps.max_daily_loss_pct == 15.0
+        assert caps.max_daily_loss_pct == 1.0
+
+    def test_default_weekly_loss_cap(self):
+        caps = PolicyCaps()
+        assert caps.max_weekly_loss_pct == 2.0
+
+    def test_default_drawdown_cap(self):
+        caps = PolicyCaps()
+        assert caps.max_drawdown_pct == 5.0
 
     def test_default_max_positions(self):
         caps = PolicyCaps()
@@ -72,14 +89,14 @@ class TestPolicyCaps:
 # ---------------------------------------------------------------------------
 
 class TestExecutionPolicy:
-    def _policy(self, equity=100.0, positions=0):
+    def _policy(self, equity=10000.0, positions=0):
         caps = PolicyCaps()
         p = ExecutionPolicy(caps)
         p.update_account_state(equity=equity, open_positions=positions)
         return p
 
     def test_valid_intent_creation(self):
-        p = self._policy(equity=100.0)
+        p = self._policy(equity=10000.0)
         intent = p.create_intent(
             symbol="EUR/USD", side="BUY",
             entry=1.1000, stop_loss=1.0980, take_profit=1.1040,
@@ -91,27 +108,29 @@ class TestExecutionPolicy:
         assert intent.sl_pips > 0
         assert intent.rr_ratio >= 1.0
 
-    def test_risk_usd_is_five_percent(self):
-        p = self._policy(equity=100.0)
+    def test_risk_usd_is_budget(self):
+        p = self._policy(equity=10000.0)
         intent = p.create_intent(
             symbol="EUR/USD", side="BUY",
             entry=1.1000, stop_loss=1.0980, take_profit=1.1040,
         )
-        # 5% of $100 = $5.00
-        assert intent.risk_usd == pytest.approx(5.00, abs=0.01)
+        # intent.risk_usd is the full per-trade budget: 0.25% of $10000
+        assert intent.risk_usd == pytest.approx(25.00, abs=0.01)
+        # The floored size risks less than the budget: 0.12 x 20 pips x $10
+        assert intent.volume * intent.sl_pips * 10.0 <= intent.risk_usd + 0.01
 
-    def test_volume_sizing_at_5pct_risk(self):
-        p = self._policy(equity=100.0)
+    def test_volume_sizing_at_mandate_risk(self):
+        p = self._policy(equity=10000.0)
         intent = p.create_intent(
             symbol="EUR/USD", side="BUY",
             entry=1.1000, stop_loss=1.0980, take_profit=1.1040,
         )
-        # 5% of $100 = $5.00 risk. 20-pip SL, $10/pip/lot (EUR/USD)
-        # ideal = 5.00 / (20 * 10) = 0.025 lots, rounded to 0.02
-        assert intent.volume == pytest.approx(0.02, abs=0.01)
+        # 0.25% of $10000 = $25.00 risk. 20-pip SL, $10/pip/lot (EUR/USD)
+        # ideal = 25.00 / (20 * 10) = 0.125 lots, floored to 0.12
+        assert intent.volume == pytest.approx(0.12, abs=0.01)
 
     def test_intent_expiry(self):
-        p = self._policy(equity=100.0)
+        p = self._policy(equity=10000.0)
         now = datetime(2026, 1, 1, 12, 0, 0)
         intent = p.create_intent(
             symbol="EUR/USD", side="BUY",
@@ -122,7 +141,7 @@ class TestExecutionPolicy:
         assert intent.is_expired(now + timedelta(seconds=301))
 
     def test_intent_key_is_idempotent(self):
-        p = self._policy(equity=100.0)
+        p = self._policy(equity=10000.0)
         now = datetime(2026, 1, 1, 12, 0, 0)
         i1 = p.create_intent(
             symbol="EUR/USD", side="BUY",
@@ -135,15 +154,58 @@ class TestExecutionPolicy:
         assert i1.key == i2.key
 
     def test_refused_on_position_cap(self):
-        p = self._policy(equity=100.0, positions=3)
+        p = self._policy(equity=10000.0, positions=3)
         intent = p.create_intent(
             symbol="EUR/USD", side="BUY",
             entry=1.1000, stop_loss=1.0980, take_profit=1.1040,
         )
         assert intent.status == INTENT_REFUSED_POSITION_CAP
 
-    def test_refused_on_bad_side(self):
+    def test_refused_on_unverified_open_risk(self):
+        # Positions open but the aggregate stop risk is unknown -> fail closed
+        p = self._policy(equity=10000.0, positions=1)
+        intent = p.create_intent(
+            symbol="EUR/USD", side="BUY",
+            entry=1.1000, stop_loss=1.0980, take_profit=1.1040,
+        )
+        assert intent.status == INTENT_REFUSED_UNVERIFIED_RISK
+
+    def test_verified_open_risk_allows_intent(self):
+        p = self._policy(equity=10000.0, positions=1)
+        p.update_account_state(
+            equity=10000.0, open_positions=1, open_stop_risk_usd=20.0,
+        )
+        intent = p.create_intent(
+            symbol="EUR/USD", side="BUY",
+            entry=1.1000, stop_loss=1.0980, take_profit=1.1040,
+        )
+        assert intent.status == INTENT_VALID
+
+    def test_refused_on_aggregate_stop_risk(self):
+        # 0.75% of $10000 = $75.00 cap; $60 open + $25 budget = $85 > $75
+        p = self._policy(equity=10000.0, positions=1)
+        p.update_account_state(
+            equity=10000.0, open_positions=1, open_stop_risk_usd=60.0,
+        )
+        intent = p.create_intent(
+            symbol="EUR/USD", side="BUY",
+            entry=1.1000, stop_loss=1.0980, take_profit=1.1040,
+        )
+        assert intent.status == INTENT_REFUSED_AGGREGATE_RISK
+
+    def test_refused_on_risk_budget_below_min_lot(self):
+        # $100 account: 0.25% = $0.25 budget; 20-pip SL needs $2.00 for
+        # one min lot -> raw 0.0125 < 0.01? No: 0.25/(20*10)=0.00125 < 0.01
+        # -> refuse; never clamp the size up.
         p = self._policy(equity=100.0)
+        intent = p.create_intent(
+            symbol="EUR/USD", side="BUY",
+            entry=1.1000, stop_loss=1.0980, take_profit=1.1040,
+        )
+        assert intent.status == INTENT_REFUSED_RISK_BUDGET
+
+    def test_refused_on_bad_side(self):
+        p = self._policy(equity=10000.0)
         intent = p.create_intent(
             symbol="EUR/USD", side="HOLD",
             entry=1.1000, stop_loss=1.0980, take_profit=1.1040,
@@ -151,7 +213,7 @@ class TestExecutionPolicy:
         assert intent.status == INTENT_REFUSED_UNTRADEABLE
 
     def test_refused_on_sl_wrong_side_buy(self):
-        p = self._policy(equity=100.0)
+        p = self._policy(equity=10000.0)
         intent = p.create_intent(
             symbol="EUR/USD", side="BUY",
             entry=1.1000, stop_loss=1.1020, take_profit=1.1040,
@@ -159,7 +221,7 @@ class TestExecutionPolicy:
         assert intent.status == INTENT_REFUSED_UNTRADEABLE
 
     def test_refused_on_sl_wrong_side_sell(self):
-        p = self._policy(equity=100.0)
+        p = self._policy(equity=10000.0)
         intent = p.create_intent(
             symbol="EUR/USD", side="SELL",
             entry=1.1000, stop_loss=1.0980, take_profit=1.0960,
@@ -167,7 +229,7 @@ class TestExecutionPolicy:
         assert intent.status == INTENT_REFUSED_UNTRADEABLE
 
     def test_refused_on_low_rr(self):
-        p = self._policy(equity=100.0)
+        p = self._policy(equity=10000.0)
         intent = p.create_intent(
             symbol="EUR/USD", side="BUY",
             entry=1.1000, stop_loss=1.0980, take_profit=1.1005,
@@ -176,8 +238,8 @@ class TestExecutionPolicy:
 
     def test_refused_on_daily_loss(self):
         p = self._policy(equity=100.0)
-        # Simulate a $15.00 daily loss (15% of $100)
-        p.update_account_state(equity=100.0, open_positions=0, daily_pnl=-15.00)
+        # Simulate a $1.00 daily loss (1% of $100)
+        p.update_account_state(equity=100.0, open_positions=0, daily_pnl=-1.00)
         intent = p.create_intent(
             symbol="EUR/USD", side="BUY",
             entry=1.1000, stop_loss=1.0980, take_profit=1.1040,
@@ -185,12 +247,14 @@ class TestExecutionPolicy:
         assert intent.status == INTENT_REFUSED_DAILY_LOSS
 
     def test_daily_reset(self):
-        p = self._policy(equity=100.0)
-        # Day 1: lose $15.00
-        p.update_account_state(equity=100.0, open_positions=0, daily_pnl=-15.00)
+        p = self._policy(equity=10000.0)
+        # Day 1: lose 1% ($100)
+        p.update_account_state(
+            equity=10000.0, open_positions=0, daily_pnl=-100.00,
+        )
         # Day 2: new day resets daily tracking
         p.update_account_state(
-            equity=100.0, open_positions=0, daily_pnl=0.0,
+            equity=10000.0, open_positions=0, daily_pnl=0.0,
             now=datetime(2026, 1, 2, 12, 0, 0),
         )
         intent = p.create_intent(

@@ -110,7 +110,16 @@ async def main() -> int:
     # 3. Create order intents
     # ------------------------------------------------------------------
     print("\n[3] Creating order intents via ExecutionPolicy...")
-    caps = PolicyCaps()
+    # Plumbing demo only: scaffold the pre-mandate caps back in so this
+    # $100-account flow test can still produce intent(s). The live window
+    # runner uses the real mandate caps (0.25%/0.75%) and correctly
+    # refuses at this equity. Refusal checks in step [6] below use the
+    # real default PolicyCaps().
+    caps = PolicyCaps(
+        max_risk_per_trade_pct=5.0,
+        max_aggregate_stop_risk_pct=5.0,
+        max_lot_size=0.01,
+    )
     policy = ExecutionPolicy(caps)
     policy.update_account_state(equity=EQUITY, open_positions=0)
 

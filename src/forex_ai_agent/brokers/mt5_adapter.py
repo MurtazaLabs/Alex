@@ -389,10 +389,33 @@ class MT5Adapter(BrokerAdapter):
 
     # -- writes (unreachable at MAX_PERMISSION_LEVEL=0) -------------------
 
+    def _terminal_write_blocked(self) -> Optional[OrderAck]:
+        """Refuse writes before the wire when terminal Algo Trading is off.
+
+        In that state the terminal's send call returns ``None`` (no
+        retcode), an ambiguous outcome that forces fail-closed
+        reconciliation. Refuse deterministically instead, with an
+        actionable reason.
+        """
+        info = self._invoke("terminal_info", CALL_READ, self._mt5.terminal_info)
+        if info is None or bool(getattr(info, "trade_allowed", True)):
+            return None
+        return OrderAck(
+            sent=False,
+            status="TERMINAL_BLOCKED",
+            reason=(
+                "AutoTrading is disabled in the MT5 terminal "
+                "(toolbar Algo Trading button is off) - nothing was sent"
+            ),
+        )
+
     def submit_order(self, request: OrderRequest) -> OrderAck:
         """Send an order. Refused at level 0 and in shadow mode — by design."""
         self._authorize_write("submit_order")
         self._require_connected()
+        blocked = self._terminal_write_blocked()
+        if blocked is not None:
+            return blocked
         mt5 = self._mt5
         broker_symbol = self._write_symbol(request.symbol)
         is_buy = str(request.side).upper() in ("BUY", "LONG")
@@ -455,6 +478,9 @@ class MT5Adapter(BrokerAdapter):
     ) -> OrderAck:
         self._authorize_write("modify_order")
         self._require_connected()
+        blocked = self._terminal_write_blocked()
+        if blocked is not None:
+            return blocked
         mt5 = self._mt5
         payload = {
             "action": getattr(mt5, "TRADE_ACTION_SLTP", 6),
@@ -490,6 +516,9 @@ class MT5Adapter(BrokerAdapter):
     ) -> OrderAck:
         self._authorize_write("close_position")
         self._require_connected()
+        blocked = self._terminal_write_blocked()
+        if blocked is not None:
+            return blocked
         mt5 = self._mt5
         found = self._invoke(
             "positions_get", CALL_READ, self._mt5.positions_get, ticket=int(ticket)

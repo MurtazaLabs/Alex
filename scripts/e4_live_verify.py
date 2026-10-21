@@ -94,7 +94,7 @@ def _next_weekday_at(now, weekday, hour):
 
 
 def _next_open_window(now, session):
-    probe = now.replace(second=0, microsecond=0)
+    probe = now.replace(minute=0, second=0, microsecond=0)
     for _ in range(24 * 8):
         probe += timedelta(hours=1)
         if session.check(probe).open:
@@ -226,12 +226,26 @@ def main() -> int:
     # ------------------------------------------------------------------
     # 2. Gate chain
     # ------------------------------------------------------------------
-    policy = ExecutionPolicy(PolicyCaps())
+    # Drill plumbing caps: the mandate (0.25%) cannot size even one 0.01
+    # lot on this account (needs the budget to cover a 40-pip stop), so
+    # this drill scaffold restores the pre-mandate demo caps for the
+    # round-trip only. Requires equity >= $80 (0.01 lot risk at 40 pips
+    # = $4.00 = 5% of $80). The live window runner uses the real mandate.
+    policy = ExecutionPolicy(PolicyCaps(
+        max_risk_per_trade_pct=5.0,
+        max_aggregate_stop_risk_pct=5.0,
+        max_lot_size=0.01,
+    ))
     policy.update_account_state(equity=float(account.equity), open_positions=0,
                                 daily_pnl=0.0, now=now)
     governor = ExecutionGovernor(GovernorLimits(
-        daily_loss_limit=float(account.equity) * 0.15,
+        daily_loss_limit=float(account.equity)
+        * (DEFAULT_LIVE_CAPS.max_daily_loss_pct / 100.0),
+        max_drawdown=float(account.equity)
+        * (DEFAULT_LIVE_CAPS.max_drawdown_pct / 100.0),
         max_positions=3,
+        weekly_loss_limit=float(account.equity)
+        * (DEFAULT_LIVE_CAPS.max_weekly_loss_pct / 100.0),
     ))
     tokens = ApprovalTokenStore()
     transmitter = LiveTransmitter(adapter, tokens, governor)
@@ -495,7 +509,9 @@ def run_order_drill(adapter, policy, governor, tokens, mt5, spec, session):
         tracker.record_deal(profit=net, ts=datetime.utcnow(), ticket=ticket,
                             symbol=SYMBOL, volume=0.01, comment="e4 drill")
         feed = sync_account_into(tracker, adapter.account(), policy=policy,
-                                 governor=governor, daily_loss_pct=15.0,
+                                 governor=governor,
+                                 daily_loss_pct=DEFAULT_LIVE_CAPS.max_daily_loss_pct,
+                                 daily_pnl=0.0,
                                  now=datetime.utcnow())
         _record("order drill: tracker + equity sync fed", True,
                 f"open={feed.open_positions} realized={feed.realized_pnl_today:+.2f} "

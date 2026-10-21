@@ -4,13 +4,17 @@ Turns approved-spec signals into fully specified order INTENTS. An intent is
 a complete, traceable description of what WOULD be sent: symbol, side,
 volume, SL/TP, expiry, and the deterministic math that produced each field.
 
-Every intent is validated against the E3 hard caps before it can exist:
+Every intent is validated against the mandate hard caps before it can exist
+(ALEX_TRADING_MANDATE.md v1.0 — machine-readable in execution/risk_mandate.py):
 
-- Per-trade risk ≤ 0.5% equity (hard-coded constant)
-- Daily loss ≤ 1.5% equity (checked against governor breakers)
-- Max concurrent positions ≤ 3
-- Min-lot sizing (0.01) with lot-step rounding
-- Intent expiry (default 5 minutes)
+- Per-trade risk <= 0.25% equity
+- Aggregate open stop risk <= 0.75% equity (positions + pending intents)
+- Daily loss <= 1.0% of the day's starting equity
+- Weekly loss <= 2.0% of the week's starting equity
+- Drawdown <= 5.0% from the equity high-water mark (halt until human clears)
+- Max concurrent positions <= 3
+- If the minimum lot would risk more than the per-trade budget: REFUSE
+  (never clamp up — a min-lot trade that violates the budget is not taken)
 
 The policy NEVER sends anything. It produces intents; a human grants a
 single-use approval token; only then can the broker adapter transmit the
@@ -33,8 +37,10 @@ from ..utils.math_helpers import (
     pip_size_for_symbol,
     pips_between,
     position_size_lots,
+    raw_position_size_lots,
     risk_reward_ratio,
 )
+from .risk_mandate import ACTIVE_MANDATE
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +53,11 @@ __all__ = [
     "INTENT_REFUSED_RISK_CAP",
     "INTENT_REFUSED_POSITION_CAP",
     "INTENT_REFUSED_DAILY_LOSS",
+    "INTENT_REFUSED_WEEKLY_LOSS",
+    "INTENT_REFUSED_DRAWDOWN",
+    "INTENT_REFUSED_AGGREGATE_RISK",
+    "INTENT_REFUSED_UNVERIFIED_RISK",
+    "INTENT_REFUSED_RISK_BUDGET",
     "INTENT_REFUSED_UNTRADEABLE",
     "INTENT_REFUSED_GOVERNOR",
 ]
@@ -56,27 +67,43 @@ INTENT_EXPIRED = "EXPIRED"
 INTENT_REFUSED_RISK_CAP = "REFUSED_RISK_CAP"
 INTENT_REFUSED_POSITION_CAP = "REFUSED_POSITION_CAP"
 INTENT_REFUSED_DAILY_LOSS = "REFUSED_DAILY_LOSS"
+INTENT_REFUSED_WEEKLY_LOSS = "REFUSED_WEEKLY_LOSS"
+INTENT_REFUSED_DRAWDOWN = "REFUSED_DRAWDOWN"
+INTENT_REFUSED_AGGREGATE_RISK = "REFUSED_AGGREGATE_RISK"
+INTENT_REFUSED_UNVERIFIED_RISK = "REFUSED_UNVERIFIED_RISK"
+INTENT_REFUSED_RISK_BUDGET = "REFUSED_RISK_BUDGET"
 INTENT_REFUSED_UNTRADEABLE = "REFUSED_UNTRADEABLE"
 INTENT_REFUSED_GOVERNOR = "REFUSED_GOVERNOR"
 
 
 @dataclass(frozen=True)
 class PolicyCaps:
-    """Hard-coded E3 caps. Deterministic constants — reviewed by human.
+    """Hard-coded mandate caps. Deterministic constants — reviewed by human.
 
     These are the NON-NEGOTIABLE limits for live execution. They cannot be
     changed by any tool, LLM call, or agent handler. Changing them requires
     a code edit reviewed by the human operator.
 
-    CONFIRMED 2026-10-16: 5% risk/trade, 15% daily loss, 3 positions.
+    Values: mandate v1.0 (ALEX_TRADING_MANDATE.md), approved by the human
+    2026-10-18 for implementation before the 30-day window opens. The
+    machine-readable source of truth is execution/risk_mandate.py
+    (ACTIVE_MANDATE) — this class only references it.
     """
 
-    #: Maximum risk per trade as % of equity (5.0% = 5.0)
-    max_risk_per_trade_pct: float = 5.0
-    #: Maximum daily loss as % of equity (15.0% = 15.0)
-    max_daily_loss_pct: float = 15.0
-    #: Maximum concurrent open positions
-    max_concurrent_positions: int = 3
+    #: Maximum risk per trade as % of equity (mandate: 0.25%)
+    max_risk_per_trade_pct: float = ACTIVE_MANDATE.max_risk_per_trade_pct
+    #: Max aggregate open stop risk as % of equity (mandate: 0.75%)
+    max_aggregate_stop_risk_pct: float = (
+        ACTIVE_MANDATE.max_aggregate_stop_risk_pct
+    )
+    #: Maximum daily loss as % of equity (mandate: 1.0%)
+    max_daily_loss_pct: float = ACTIVE_MANDATE.max_daily_loss_pct
+    #: Maximum weekly loss as % of equity (mandate: 2.0%)
+    max_weekly_loss_pct: float = ACTIVE_MANDATE.max_weekly_loss_pct
+    #: Maximum drawdown from the equity high-water mark (mandate: 5.0%)
+    max_drawdown_pct: float = ACTIVE_MANDATE.max_drawdown_pct
+    #: Maximum concurrent open positions (mandate: 3)
+    max_concurrent_positions: int = ACTIVE_MANDATE.max_concurrent_positions
     #: Maximum total notional exposure as % of equity
     max_total_exposure_pct: float = 5.0
     #: Minimum lot size (broker constraint)
@@ -177,6 +204,11 @@ class ExecutionPolicy:
         self._day_start_equity: float = 0.0
         self._current_equity: float = 0.0
         self._current_date: Optional[str] = None
+        # Mandate baselines (fed by the live window runner each cycle)
+        self._weekly_pnl: float = 0.0
+        self._week_start_equity: float = 0.0
+        self._equity_hwm: float = 0.0
+        self._open_stop_risk_usd: Optional[float] = None
 
     def update_account_state(
         self,
@@ -184,12 +216,31 @@ class ExecutionPolicy:
         equity: float,
         open_positions: int,
         daily_pnl: float = 0.0,
+        weekly_pnl: float = 0.0,
+        day_start_equity: Optional[float] = None,
+        week_start_equity: Optional[float] = None,
+        equity_hwm: Optional[float] = None,
+        open_stop_risk_usd: Optional[float] = None,
         now: Optional[datetime] = None,
     ) -> None:
-        """Update the policy's view of the account (called by the caller each cycle)."""
+        """Update the policy's view of the account (called by the caller each cycle).
+
+        Backwards compatible: legacy callers pass equity/open_positions/
+        daily_pnl only and the mandate checks stay dormant. The live window
+        runner additionally passes the persisted baselines
+        (day/week start equity, equity high-water mark) and the verified
+        aggregate open stop risk in USD.
+
+        ``open_stop_risk_usd=None`` means "not verifiable": when open
+        positions exist in that state the policy FAILS CLOSED and refuses
+        new intents (INTENT_REFUSED_UNVERIFIED_RISK).
+        """
         check = now or datetime.utcnow()
         date_key = check.strftime("%Y-%m-%d")
-        if date_key != self._current_date:
+        if day_start_equity is not None:
+            self._day_start_equity = float(day_start_equity)
+            self._current_date = date_key
+        elif date_key != self._current_date:
             # New day: reset daily tracking
             self._current_date = date_key
             self._day_start_equity = equity
@@ -197,6 +248,16 @@ class ExecutionPolicy:
         self._current_equity = equity
         self._open_positions = open_positions
         self._daily_pnl = daily_pnl
+        self._weekly_pnl = weekly_pnl
+        self._week_start_equity = (
+            float(week_start_equity) if week_start_equity is not None else 0.0
+        )
+        self._equity_hwm = (
+            float(equity_hwm) if equity_hwm is not None else 0.0
+        )
+        self._open_stop_risk_usd = (
+            None if open_stop_risk_usd is None else float(open_stop_risk_usd)
+        )
 
     def create_intent(
         self,
@@ -282,6 +343,26 @@ class ExecutionPolicy:
         if side == "SELL" and stop_loss <= entry:
             return INTENT_REFUSED_UNTRADEABLE
 
+        # Mandate: drawdown halt from the equity high-water mark
+        if self._equity_hwm > 0:
+            drawdown_pct = (
+                (self._equity_hwm - equity) / self._equity_hwm
+            ) * 100.0
+            if drawdown_pct >= self.caps.max_drawdown_pct:
+                return INTENT_REFUSED_DRAWDOWN
+
+        # Mandate: weekly loss halt
+        if self._week_start_equity > 0:
+            weekly_loss_pct = (
+                (
+                    self._week_start_equity
+                    - (equity + self._weekly_pnl)
+                )
+                / self._week_start_equity
+            ) * 100.0
+            if weekly_loss_pct >= self.caps.max_weekly_loss_pct:
+                return INTENT_REFUSED_WEEKLY_LOSS
+
         # Daily loss cap
         day_start = self._day_start_equity or equity
         if day_start > 0:
@@ -293,6 +374,19 @@ class ExecutionPolicy:
         if self._open_positions >= self.caps.max_concurrent_positions:
             return INTENT_REFUSED_POSITION_CAP
 
+        # Mandate: aggregate open stop risk. When positions are open but
+        # their stop risk cannot be verified, FAIL CLOSED.
+        if self._open_positions > 0 and self._open_stop_risk_usd is None:
+            return INTENT_REFUSED_UNVERIFIED_RISK
+        open_risk = self._open_stop_risk_usd or 0.0
+        projected_risk = (
+            open_risk + equity * (self.caps.max_risk_per_trade_pct / 100.0)
+        )
+        if equity > 0 and projected_risk > (
+            equity * (self.caps.max_aggregate_stop_risk_pct / 100.0)
+        ):
+            return INTENT_REFUSED_AGGREGATE_RISK
+
         # Risk:reward check
         rr = risk_reward_ratio(entry, stop_loss, take_profit)
         if rr < self.caps.min_risk_reward:
@@ -303,6 +397,24 @@ class ExecutionPolicy:
         sl_pips = pips_between(entry, stop_loss, pip_size)
         if sl_pips < 1.0:  # minimum 1 pip stop
             return INTENT_REFUSED_UNTRADEABLE
+
+        # Mandate: the minimum lot must FIT the per-trade risk budget.
+        # If even min_lot would risk more than the budget, refuse --
+        # never clamp the size up (a min-lot trade that violates the
+        # budget is not taken).
+        raw_volume = raw_position_size_lots(
+            account_equity=equity,
+            risk_percent=self.caps.max_risk_per_trade_pct,
+            entry_price=entry, stop_loss=stop_loss, symbol=symbol,
+        )
+        if raw_volume <= 0.0:
+            return INTENT_REFUSED_UNTRADEABLE
+        # Tolerate float noise on the boundary (a 20-pip distance computes as
+        # 19.9999.. pips): a budget that meets the minimum lot's risk exactly
+        # passes; anything genuinely smaller is refused.
+        budget_epsilon = self.caps.min_lot_size * 1e-6
+        if raw_volume < self.caps.min_lot_size - budget_epsilon:
+            return INTENT_REFUSED_RISK_BUDGET
 
         # Size must be within lot bounds
         volume = position_size_lots(

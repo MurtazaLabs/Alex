@@ -60,6 +60,34 @@ def risk_reward_ratio(entry: float, stop_loss: float, take_profit: float) -> flo
     return reward / risk
 
 
+def raw_position_size_lots(
+    account_equity: float,
+    risk_percent: float,
+    entry_price: float,
+    stop_loss: float,
+    symbol: str,
+    contract_size: float = 100_000.0,
+) -> float:
+    """
+    Unclamped ideal position size in lots for the full risk budget.
+
+    Position Size = Account Risk / (SL distance in pips x pip value per lot)
+    Returns 0.0 when the setup is un-tradeable (e.g. zero risk distance).
+
+    Callers use this to detect the mandate case where even the MINIMUM lot
+    would risk more than the budget: raw < min_lot means the trade must be
+    REFUSED, never clamped up to the minimum.
+    """
+    risk_amount = risk_amount_usd(account_equity, risk_percent)
+    sl_pips = pips_between(entry_price, stop_loss, pip_size_for_symbol(symbol))
+    pip_value = pip_value_per_lot(symbol, contract_size)
+
+    if sl_pips <= 0 or pip_value <= 0:
+        return 0.0
+
+    return risk_amount / (sl_pips * pip_value)
+
+
 def position_size_lots(
     account_equity: float,
     risk_percent: float,
@@ -75,15 +103,19 @@ def position_size_lots(
     Calculate the position size in lots for a trade.
 
     Position Size = Account Risk / (SL distance in pips x pip value per lot)
+    Rounds DOWN to the lot step, then clamps into [min_lot, max_lot].
     Returns 0.0 when the setup is un-tradeable (e.g. zero risk distance).
-    """
-    risk_amount = risk_amount_usd(account_equity, risk_percent)
-    sl_pips = pips_between(entry_price, stop_loss, pip_size_for_symbol(symbol))
-    pip_value = pip_value_per_lot(symbol, contract_size)
 
-    if sl_pips <= 0 or pip_value <= 0:
+    Note: the clamp up to ``min_lot_size`` is only reachable when the raw
+    size is at or above the minimum; risk-budget enforcement (refusing when
+    raw < min) belongs to the caller (ExecutionPolicy._validate).
+    """
+    raw_size = raw_position_size_lots(
+        account_equity, risk_percent, entry_price, stop_loss,
+        symbol, contract_size,
+    )
+    if raw_size <= 0.0:
         return 0.0
 
-    raw_size = risk_amount / (sl_pips * pip_value)
     rounded = math.floor(raw_size / lot_step) * lot_step
     return max(min_lot_size, min(max_lot_size, rounded))

@@ -12,6 +12,7 @@ Endpoints:
 - POST /execution/governor/arm    — arm the execution governor (human)
 - POST /execution/governor/trip   — trip the kill switch (human)
 - GET  /execution/governor/status — governor state
+- GET  /execution/window/status — E4 window state + fresh eligibility
 """
 
 from __future__ import annotations
@@ -41,8 +42,8 @@ _caps = PolicyCaps()  # hard-coded defaults — the non-negotiable constants
 _policy = ExecutionPolicy(_caps)
 _token_store = ApprovalTokenStore()
 _governor = ExecutionGovernor(GovernorLimits(
-    daily_loss_limit=15.0,  # $15.00 for $100 equity (15%); updated by /account-state
-    max_drawdown=50.0,
+    daily_loss_limit=1.0,  # mandate daily cap on the $100 demo (1%); /account-state recomputes
+    max_drawdown=5.0,      # mandate 5% halt from the equity high-water mark
     max_positions=_caps.max_concurrent_positions,
     trip_position_policy="POSITION_HOLD",
 ))
@@ -102,7 +103,7 @@ async def update_account_state(req: AccountStateRequest) -> dict:
         open_positions=req.open_positions,
         daily_pnl=req.daily_pnl,
     )
-    # Update governor's daily loss limit to equity-aware value (1.5% of equity)
+    # Update the governor's dollar halt from the fresh equity (mandate % constant)
     _governor.limits.daily_loss_limit = req.equity * (_caps.max_daily_loss_pct / 100.0)
     return {"status": "ok", "equity": req.equity, "open_positions": req.open_positions}
 
@@ -306,3 +307,34 @@ async def governor_audit() -> dict:
 async def token_audit() -> dict:
     """Approval token audit log (grants, consumes, revokes, expiries)."""
     return {"audit": _token_store.audit_log()}
+
+
+# ---------------------------------------------------------------------------
+# E4 window (read-only; the live loop itself is a human-authorized script)
+# ---------------------------------------------------------------------------
+
+@router.get("/window/status")
+async def window_status_endpoint() -> dict:
+    """E4 window state, sign-off and FRESH eligibility (fail closed).
+
+    Read-only: this endpoint can never start, stop or trade anything.
+    """
+    from ....execution.live.window import check_eligibility, window_status
+
+    status = window_status()
+    state = status.get("state")
+    if state:
+        try:
+            eligibility = await check_eligibility(
+                version_id=str(state["version_id"]),
+                pair=str(state.get("pair", "EUR/USD")),
+            )
+            status["eligibility"] = eligibility.to_dict()
+        except Exception as exc:  # noqa: BLE001 - status stays readable
+            status["eligibility"] = {"error": f"{type(exc).__name__}: {exc}"}
+    else:
+        status["eligibility"] = {
+            "all_met": False, "checks": [],
+            "note": "no window started",
+        }
+    return status

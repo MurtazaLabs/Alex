@@ -344,7 +344,15 @@ class ReadonlyBroker(abc.ABC):
         """Run one terminal call and record it (success or exception)."""
         payload = detail or {}
         try:
-            result = fn(*args, **kwargs)
+            # CPython passes an empty keyword dict when the call uses
+            # ``**kwargs`` syntax even when it is empty, and the terminal
+            # C parser rejects ANY keyword dict on the send call (returns
+            # None + (-2, 'Unnamed arguments not allowed')). Call without
+            # keyword spreading when there are none.
+            if kwargs:
+                result = fn(*args, **kwargs)
+            else:
+                result = fn(*args)
         except Exception as exc:  # noqa: BLE001 — IPC errors are data here
             self._record_call(
                 method, mode, ok=False, error=f"{type(exc).__name__}: {exc}", **payload

@@ -25,11 +25,14 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Union
 
+from ...utils.math_helpers import pip_size_for_symbol, pip_value_per_lot
+
 __all__ = [
     "PositionBook",
     "EquitySync",
     "PositionTracker",
     "sync_account_into",
+    "stop_risk_usd",
 ]
 
 PositionLike = Any  # PositionSnapshot or dict-shaped equivalent
@@ -233,6 +236,42 @@ class PositionTracker:
         )
 
 
+def stop_risk_usd(
+    positions: Iterable[PositionLike],
+    *,
+    symbol: str = "",
+    contract_size: float = 100_000.0,
+) -> Optional[float]:
+    """Total stop-loss risk across open positions, in account currency.
+
+    risk per position = |price_open - sl| (pips) * pip_value_per_lot * volume
+
+    Returns None (FAIL CLOSED) when any position has no stop loss or no
+    usable entry price/symbol -- the mandate then refuses new trades
+    because the aggregate open risk cannot be verified.
+    """
+    total = 0.0
+    for row in positions:
+        sl = _attr(row, "sl")
+        entry_price = _attr(row, "price_open")
+        volume = float(_attr(row, "volume", 0.0) or 0.0)
+        row_symbol = str(_attr(row, "symbol", "") or "")
+        pair = row_symbol if "/" in row_symbol else symbol
+        if "/" not in pair:
+            return None
+        try:
+            sl_value = float(sl)
+            entry_value = float(entry_price)
+        except (TypeError, ValueError):
+            return None
+        if sl_value <= 0 or entry_value <= 0:
+            return None
+        pip_size = pip_size_for_symbol(pair)
+        pips = abs(entry_value - sl_value) / pip_size
+        total += pips * pip_value_per_lot(pair, contract_size) * abs(volume)
+    return round(total, 4)
+
+
 def sync_account_into(
     tracker: PositionTracker,
     account: Any,
@@ -240,13 +279,24 @@ def sync_account_into(
     policy: Any = None,
     governor: Any = None,
     daily_loss_pct: float = 15.0,
+    daily_pnl: Optional[float] = None,
+    weekly_pnl: float = 0.0,
+    day_start_equity: Optional[float] = None,
+    week_start_equity: Optional[float] = None,
+    equity_hwm: Optional[float] = None,
+    open_stop_risk_usd: Optional[float] = None,
     now: Optional[datetime] = None,
 ) -> EquitySync:
     """Push one account sync into the policy and the governor.
 
-    The policy gets ``update_account_state(equity, open_positions,
-    daily_pnl)``; the governor's dollar breaker gets recomputed from the
-    fresh equity. This is the only wiring function the live loop needs.
+    The policy gets ``update_account_state(...)`` with the tracker's feed
+    plus any mandate baselines the caller supplies (the live window runner
+    passes persisted day/week start equity, the equity high-water mark,
+    and the verified aggregate open stop risk in USD).
+
+    Legacy callers pass nothing extra: ``daily_pnl=None`` keeps the old
+    ``realized_pnl_today`` behavior; the mandate fields stay dormant.
+    The governor's dollar breaker gets recomputed from the fresh equity.
     """
     feed = tracker.sync_account(account, daily_loss_pct=daily_loss_pct, now=now)
 
@@ -254,7 +304,14 @@ def sync_account_into(
         policy.update_account_state(
             equity=feed.equity,
             open_positions=feed.open_positions,
-            daily_pnl=feed.realized_pnl_today,
+            daily_pnl=(
+                feed.realized_pnl_today if daily_pnl is None else daily_pnl
+            ),
+            weekly_pnl=weekly_pnl,
+            day_start_equity=day_start_equity,
+            week_start_equity=week_start_equity,
+            equity_hwm=equity_hwm,
+            open_stop_risk_usd=open_stop_risk_usd,
             now=feed.synced_at,
         )
 

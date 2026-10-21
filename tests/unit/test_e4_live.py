@@ -112,9 +112,19 @@ class TestLiveCaps:
         from forex_ai_agent.execution.policy import PolicyCaps
         assert DEFAULT_LIVE_CAPS.max_risk_per_trade_pct == PolicyCaps().max_risk_per_trade_pct
         assert DEFAULT_LIVE_CAPS.max_daily_loss_pct == PolicyCaps().max_daily_loss_pct
+        assert (DEFAULT_LIVE_CAPS.max_aggregate_stop_risk_pct
+                == PolicyCaps().max_aggregate_stop_risk_pct)
+        assert DEFAULT_LIVE_CAPS.max_weekly_loss_pct == PolicyCaps().max_weekly_loss_pct
+        assert DEFAULT_LIVE_CAPS.max_drawdown_pct == PolicyCaps().max_drawdown_pct
 
-    def test_weekly_cap_proposed_value(self):
-        assert DEFAULT_LIVE_CAPS.max_weekly_loss_pct == 25.0
+    def test_weekly_cap_value(self):
+        assert DEFAULT_LIVE_CAPS.max_weekly_loss_pct == 2.0
+
+    def test_mandate_cap_values(self):
+        assert DEFAULT_LIVE_CAPS.max_risk_per_trade_pct == 0.25
+        assert DEFAULT_LIVE_CAPS.max_aggregate_stop_risk_pct == 0.75
+        assert DEFAULT_LIVE_CAPS.max_daily_loss_pct == 1.0
+        assert DEFAULT_LIVE_CAPS.max_drawdown_pct == 5.0
 
     def test_news_window(self):
         assert DEFAULT_LIVE_CAPS.news_blackout_minutes == 30
@@ -131,6 +141,8 @@ class TestLiveCaps:
         assert data["pair"] == "EUR/USD"
         assert data["london_utc"] == [7, 16]
         assert data["new_york_utc"] == [12, 21]
+        assert data["max_drawdown_pct"] == 5.0
+        assert data["max_aggregate_stop_risk_pct"] == 0.75
 
     def test_caps_are_frozen(self):
         with pytest.raises(Exception):
@@ -461,11 +473,12 @@ class TestPositionTracker:
         tracker = PositionTracker(symbol="EUR/USD")
 
         feed = sync_account_into(
-            tracker, _Account(equity=200.0, balance=200.0),
+            tracker, _Account(equity=1000.0, balance=1000.0),
             policy=policy, governor=governor, daily_loss_pct=15.0, now=MONDAY_10,
         )
-        assert feed.daily_loss_limit_usd == 30.0
-        assert governor.limits.daily_loss_limit == 30.0
+        assert feed.daily_loss_limit_usd == 150.0
+        assert governor.limits.daily_loss_limit == 150.0
+        # Mandate sizing needs equity >= $800 for one min lot at a 20-pip SL
         intent = policy.create_intent(
             symbol="EUR/USD", side="BUY", entry=1.10,
             stop_loss=1.0980, take_profit=1.1040, now=MONDAY_10,

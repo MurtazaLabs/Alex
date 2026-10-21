@@ -47,6 +47,7 @@ __all__ = [
     "GovernorState",
     "TRIP_MANUAL",
     "TRIP_DAILY_LOSS",
+    "TRIP_WEEKLY_LOSS",
     "TRIP_DRAWDOWN",
     "TRIP_POSITION_COUNT",
     "TRIP_POSITION_HOLD",
@@ -58,6 +59,7 @@ __all__ = [
 GOVERNOR_STATES = ["DISARMED", "ARMED", "HALTED"]
 TRIP_MANUAL = "MANUAL"
 TRIP_DAILY_LOSS = "DAILY_LOSS"
+TRIP_WEEKLY_LOSS = "WEEKLY_LOSS"
 TRIP_DRAWDOWN = "DRAWDOWN"
 TRIP_POSITION_COUNT = "POSITION_COUNT"
 
@@ -84,6 +86,7 @@ class GovernorLimits:
         max_positions: int = 10,
         max_staleness_bars: int = 3,
         trip_position_policy: str = TRIP_POSITION_HOLD,
+        weekly_loss_limit: Optional[float] = None,
     ) -> None:
         if trip_position_policy not in TRIP_POSITION_POLICIES:
             raise ValueError(
@@ -95,6 +98,8 @@ class GovernorLimits:
         self.max_positions = max_positions
         self.max_staleness_bars = max_staleness_bars
         self.trip_position_policy = trip_position_policy
+        #: Weekly loss breaker in account currency; None = disabled (legacy).
+        self.weekly_loss_limit = weekly_loss_limit
 
 
 class GovernorState:
@@ -272,12 +277,25 @@ class ExecutionGovernor:
         peak_equity: float,
         open_positions: int,
         now: datetime,
+        week_start_equity: float = 0.0,
     ) -> None:
-        """Evaluate deterministic breakers; trip on the first breach."""
+        """Evaluate deterministic breakers; trip on the first breach.
+
+        ``week_start_equity``/``weekly_loss_limit`` are optional (mandate
+        v1.0): when both are provided and the equity loss since the week's
+        start reaches the limit, the weekly breaker trips.
+        """
         if self.state.tripped:
             return
         if day_start_equity > 0 and (day_start_equity - equity) >= self.limits.daily_loss_limit:
             self.trip(TRIP_DAILY_LOSS, ts=now)
+            return
+        if (
+            self.limits.weekly_loss_limit is not None
+            and week_start_equity > 0
+            and (week_start_equity - equity) >= self.limits.weekly_loss_limit
+        ):
+            self.trip(TRIP_WEEKLY_LOSS, ts=now)
             return
         if (peak_equity - equity) >= self.limits.max_drawdown:
             self.trip(TRIP_DRAWDOWN, ts=now)

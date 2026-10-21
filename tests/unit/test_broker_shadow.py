@@ -447,6 +447,32 @@ def test_submit_order_keeps_the_plain_name_when_no_suffix_matches():
     assert ack.status == "FILLED"
 
 
+def test_writes_refuse_before_the_wire_when_terminal_autotrading_is_off():
+    """With the terminal's Algo Trading button off, order_send returns no
+    retcode (ambiguous outcome). The adapter must refuse deterministically
+    BEFORE the wire, with an actionable reason."""
+    stub = _StubMT5()
+    stub.terminal_info = lambda: SimpleNamespace(
+        connected=True, trade_allowed=False
+    )
+    adapter = _adapter(stub, level=PermissionLevel.AUTONOMOUS, shadow_mode=False)
+    adapter.connect()
+
+    ack = adapter.submit_order(_request())
+    assert ack.sent is False
+    assert ack.status == "TERMINAL_BLOCKED"
+    assert "AutoTrading" in ack.reason
+
+    ack = adapter.modify_order(1, sl=1.2, tp=1.3)
+    assert ack.sent is False and ack.status == "TERMINAL_BLOCKED"
+
+    stub._positions = [_position(7, BROKER_SYMBOL, "BUY", 0.01)]
+    ack = adapter.close_position(7)
+    assert ack.sent is False and ack.status == "TERMINAL_BLOCKED"
+
+    assert stub.sent == []  # nothing ever reached the wire
+
+
 def test_close_stamps_the_positions_own_magic():
     from forex_ai_agent.execution.live.caps import ALEX_LIVE_MAGIC
 
@@ -601,6 +627,30 @@ def test_order_send_appears_only_inside_gated_write_methods():
     )
     assert gated > 0
     assert class_source.count("order_send") == gated
+
+
+def test_invoke_never_spreads_an_empty_kwargs_dict_into_the_terminal():
+    """MetaTrader5's C parser rejects ANY keyword dict on order_send, even
+    an empty one produced by ``fn(*args, **{})`` — the real terminal answers
+    None + (-2, 'Unnamed arguments not allowed'). The wrapper must call
+    ``fn(*args)`` when there are no keywords."""
+    source = inspect.getsource(ReadonlyBroker._invoke)
+    assert "if kwargs:" in source
+    assert "fn(*args)" in source
+
+
+def test_invoke_still_forwards_non_empty_kwargs():
+    from forex_ai_agent.brokers.base import CALL_READ
+
+    adapter = _adapter(_StubMT5())
+    seen = {}
+
+    def fn(*args, **kwargs):
+        seen["args"], seen["kwargs"] = args, kwargs
+        return True
+
+    assert adapter._invoke("probe", CALL_READ, fn, 1, 2, alpha="x") is True
+    assert seen == {"args": (1, 2), "kwargs": {"alpha": "x"}}
 
 
 def test_a_fully_authorized_send_reaches_the_transport_exactly_once():
